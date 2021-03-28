@@ -1,0 +1,2 @@
+# FTX
+For bot trading
