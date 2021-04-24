@@ -130,4 +130,4 @@ dmypy.json
 
 # User setting
 .idea/
-venv/apis.json
+apis.json
