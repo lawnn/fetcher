@@ -9,7 +9,7 @@ https://docs.ftx.com/
 Plese install requirements.txt
 <br>
 
-### Special thanks
+## Special thanks
 Pybotters
 <br>
 https://github.com/MtkN1/pybotters/
