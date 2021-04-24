@@ -1,5 +1,5 @@
 # FTX wrraper
-For bot trading
+For crypto currency botter.
 <br>
 API Documents<br>
 https://docs.ftx.com/
