@@ -1,6 +1,7 @@
-# FTX
+# FTX wrraper
 For bot trading
 <br>
+API Documents<br>
 https://docs.ftx.com/
 <br>
-参考：https://note.com/sdu0217/n/n364b1ed2cd47
+
