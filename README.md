@@ -8,6 +8,8 @@ https://docs.ftx.com/
 ## Usage
 Plese install requirements.txt
 <br>
+
+### Special thanks
 Pybotters
 <br>
 https://github.com/MtkN1/pybotters/
