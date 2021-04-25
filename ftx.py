@@ -385,7 +385,7 @@ class FTX(object):
         results = await self._requests('delete', path)
         return results
 
-    async def cancell_all_orders(self):
+    async def cancel_all_orders(self):
         path = f'/orders'
         results = await self._requests('delete', path)
         return results
@@ -529,7 +529,7 @@ class FTX(object):
         results = await self._requests('get', path)
         return results
 
-    async def acount_options_info(self):
+    async def account_options_info(self):
         path = f'/options/account_info'
         results = await self._requests('get', path)
         return results
@@ -625,22 +625,21 @@ class FTX(object):
 
     async def handler(self, msg, *ws):
         return msg
-        # return await msg
 
 
-async def debug():
-    ftx = FTX('BOT_03')
+# async def debug():
+#     ftx = FTX('BOT') # Todo: Your sub-account name
     # get method
     # print(await ftx.trades('ETH-PERP'))
     # print(await ftx.account())
     # print(await ftx.positions())
-    # print(await ftx.acount_options_info())
+    # print(await ftx.account_options_info())
     # print(await ftx.subaccounts_balances())
     # post method
     # print(await ftx.change_leverage(1))
     # subscribe
     # await ftx.ws('unsubscribe', 'ticker', 'BTC-PERP')
-    await ftx.ws('subscribe', 'trades', 'BTC-PERP')
+    # await ftx.ws('subscribe', 'trades', 'BTC-PERP')
 
-if __name__ == '__main__':
-    asyncio.run(debug())
+# if __name__ == '__main__':
+#     asyncio.run(debug())
