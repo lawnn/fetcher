@@ -109,10 +109,12 @@ class FTX(object):
         """
         path = f'/markets/{market_name}/trades'
         params = {
-            'limit': limit,
-            'start_time': start_time,
-            'end_time': end_time
+            'limit': limit
         }
+        if start_time is not None:
+            params['start_time'] = start_time
+        if end_time is not None:
+            params['end_time'] = end_time
         results = await self._requests('get', path, params)
         return results
 
@@ -121,7 +123,7 @@ class FTX(object):
         過去の価格と取引量を取得
         :param market_name: str
         :param resolution: int # 15, 600, 300, 900, 3600, 14400, 86400
-        :param limit: str # max 5000
+        :param limit: int # max 5000
         :param start_time: int
         :param end_time: int
         :return:
@@ -129,10 +131,12 @@ class FTX(object):
         path = f'/markets/{market_name}/candles'
         params = {
             'resolution': resolution,
-            'limit': limit,
-            'start_time': start_time,
-            'end_time': end_time
+            'limit': limit
         }
+        if start_time is not None:
+            params['start_time'] = start_time
+        if end_time is not None:
+            params['end_time'] = end_time
         results = await self._requests('get', path, params)
         return results
 
@@ -160,11 +164,14 @@ class FTX(object):
         :return: dict
         """
         path = f'/funding_rates'
-        params = {
-            'start_time': start_time,
-            'end_time': end_time,
-            'future': future
-        }
+        params = {}
+        if future is not None:
+            params['future'] = future
+        if start_time is not None:
+            params['start_time'] = start_time
+        if end_time is not None:
+            params['end_time'] = end_time
+
         results = await self._requests('get', path, params)
         return results
 
@@ -183,18 +190,21 @@ class FTX(object):
         過去の価格と取引量を取得
         :param index_name: str
         :param resolution: int # 15, 600, 300, 900, 3600, 14400, 86400
-        :param limit: str # max 5000
+        :param limit: inst # max 5000
         :param start_time: int
         :param end_time: int
         :return:
         """
         path = f'/indexes/{index_name}/candles'
         params = {
-            'resolution': resolution,
-            'limit': limit,
-            'start_time': start_time,
-            'end_time': end_time
+            'resolution': resolution
         }
+        if limit is not None:
+            params['limit'] = limit
+        if start_time is not None:
+            params['start_time'] = start_time
+        if end_time is not None:
+            params['end_time'] = end_time
         results = await self._requests('get', path, params)
         return results
 
@@ -239,23 +249,27 @@ class FTX(object):
         results = await self._requests('get', path)
         return results
 
-    async def deposit_history(self, limit, start_time, end_time):
+    async def deposit_history(self, limit=None, start_time=None, end_time=None):
         path = f'/wallet/deposits'
-        params = {
-            'limit': limit,
-            'start_time': start_time,
-            'end_time': end_time
-        }
+        params = {}
+        if limit is not None:
+            params['limit'] = limit
+        if start_time is not None:
+            params['start_time'] = start_time
+        if end_time is not None:
+            params['end_time'] = end_time
         results = await self._requests('get', path, params)
         return results
 
-    async def withdrawal_history(self, limit, start_time, end_time):
+    async def withdrawal_history(self, limit=None, start_time=None, end_time=None):
         path = f'/wallet/withdrawal'
-        params = {
-            'limit': limit,
-            'start_time': start_time,
-            'end_time': end_time
-        }
+        params = {}
+        if limit is not None:
+            params['limit'] = limit
+        if start_time is not None:
+            params['start_time'] = start_time
+        if end_time is not None:
+            params['end_time'] = end_time
         results = await self._requests('get', path, params)
         return results
 
@@ -278,16 +292,19 @@ class FTX(object):
         :param market: str
         :param start_time: int
         :param end_time: int
-        :param limit: str # max 5000
+        :param limit: int # max 5000
         :return: dict
         """
         path = f'orders/history'
         params = {
-            'market': market,
-            'start_time': start_time,
-            'end_time': end_time,
-            'limit': limit
+            'market': market
         }
+        if limit is not None:
+            params['limit'] = limit
+        if start_time is not None:
+            params['start_time'] = start_time
+        if end_time is not None:
+            params['end_time'] = end_time
         results = await self._requests('get', path, params)
         return results
 
@@ -300,10 +317,11 @@ class FTX(object):
         """
 
         path = f'/conditional_orders'
-        params = {
-            'market': market,
-            'type': type_
-        }
+        params = {}
+        if market is not None:
+            params['market'] = market
+        if type_ is not None:
+            params['type'] = type_
         results = await self._requests('get', path, params)
         return results
 
@@ -327,15 +345,22 @@ class FTX(object):
         :return: dict
         """
         path = f'/conditional_orders/history'
-        params = {
-            'market': market,
-            'start_time': start_time,
-            'end_time': end_time,
-            'side': side,
-            'type': type_,
-            'orderType': order_type,
-            'limit': limit
-        }
+        params = {}
+        if market is not None:
+            params['market'] = market
+        if start_time is not None:
+            params['start_time'] = start_time
+        if end_time is not None:
+            params['end_time'] = end_time
+        if side is not None:
+            params['side'] = side
+        if type_ is not None:
+            params['type'] = type_
+        if order_type is not None:
+            params['orderType'] = order_type
+        if limit is not None:
+            params['limit'] = limit
+
         results = await self._requests('get', path, params)
         return results
 
@@ -351,9 +376,10 @@ class FTX(object):
             'size': size,
             'reduceOnly': reduce_only,
             'ioc': ioc,
-            'postOnly': post_only,
-            'clientId': client_id
+            'postOnly': post_only
         }
+        if client_id is not None:
+            params['clientId'] = client_id
         results = await self._requests('post', path, params)
         return results
 
@@ -543,11 +569,13 @@ class FTX(object):
         :return:
         """
         path = f'options/historical_open_interest/BTC'
-        params = {
-            'start_time': start_time,
-            'end_time': end_time,
-            'limit': limit
-        }
+        params = {}
+        if limit is not None:
+            params['limit'] = limit
+        if start_time is not None:
+            params['start_time'] = start_time
+        if end_time is not None:
+            params['end_time'] = end_time
         results = await self._requests('get', path, params)
         return results
 
@@ -560,11 +588,13 @@ class FTX(object):
         :return:
         """
         path = f'/options/historical_volumes/BTC'
-        params = {
-            'start_time': start_time,
-            'end_time': end_time,
-            'limit': limit
-        }
+        params = {}
+        if limit is not None:
+            params['limit'] = limit
+        if start_time is not None:
+            params['start_time'] = start_time
+        if end_time is not None:
+            params['end_time'] = end_time
         results = await self._requests('get', path, params)
         return results
 
