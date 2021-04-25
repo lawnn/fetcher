@@ -31,7 +31,7 @@ class FTX(object):
                 ws = await client.ws_connect(
                     url=self._EXCHANGE_URL['Websocket'],
                     send_json=params,
-                    hdlr_json=lambda msg, ws: print(msg),
+                    hdlr_json=self.handler,
                 )
                 await ws
             else:
@@ -360,15 +360,272 @@ class FTX(object):
     async def place_trigger_order(self, market, side, size, type_, reduce_only=False, retry_unit_filled=False):
         pass
 
+    async def order_stats(self, order_id):
+        path = f'/orders/{order_id}'
+        results = await self._requests('get', path)
+        return results
+
+    async def order_status_by_client_id(self, client_order_id):
+        path = f'/orders/by_client_id/{client_order_id}'
+        results = await self._requests('get', path)
+        return results
+
+    async def cancel_order(self, order_id):
+        path = f'/orders/{order_id}'
+        results = await self._requests('delete', path)
+        return results
+
+    async def cancel_order_by_client_id(self, client_order_id):
+        path = f'/orders/by_client_id/{client_order_id}'
+        results = await self._requests('delete', path)
+        return results
+
+    async def cancel_open_trigger_order(self, id_):
+        path = f'/conditional_orders/{id_}'
+        results = await self._requests('delete', path)
+        return results
+
+    async def cancell_all_orders(self):
+        path = f'/orders'
+        results = await self._requests('delete', path)
+        return results
+
+    async def request_quote(self, from_coin, to_coin, size):
+        """
+       通貨の変換
+       :param from_coin: str
+       :param to_coin:  str
+       :param size: float
+       :return:  dict
+       """
+        path = f'/otc/quotes'
+        params = {
+            'fromCoin': from_coin,
+            'toCoin': to_coin,
+            'size': size
+        }
+        results = await self._requests('post', path, params)
+        return results
+
+    async def quote_status(self, quote_id, market):
+        path = f'/otc/quotes/{quote_id}'
+        params = {
+            'market': market
+        }
+        results = await self._requests('get', path, params)
+        return results
+
+    async def accept_quote(self, quote_id):
+        path = f'/otc/quotes/{quote_id}/accept'
+        results = await self._requests('post', path)
+        return results
+
+    async def lending_history(self):
+        path = f'/spot_margin/history'
+        results = await self._requests('get', path)
+        return results
+
+    async def borrow_rates(self):
+        path = f'/spot_margin/borrow_rates'
+        results = await self._requests('get', path)
+        return results
+
+    async def lending_rates(self):
+        path = f'/spot_margin/lending_rates'
+        results = await self._requests('get', path)
+        return results
+
+    async def daily_borrowed_amounts(self):
+        path = f'/spot_margin/borrow_summary'
+        results = await self._requests('get', path)
+        return results
+
+    async def market_info(self, market):
+        path = f'/spot_margin/market_info'
+        params = {
+            'market': market
+        }
+        results = await self._requests('get', path, params)
+        return results
+
+    async def my_borrow_history(self):
+        path = f'/spot_margin/borrow_history'
+        results = await self._requests('get', path)
+        return results
+
+    async def my_lending_history(self):
+        path = f'/spot_margin/lending_history'
+        results = await self._requests('get', path)
+        return results
+
+    async def lending_offers(self):
+        path = f'/spot_margin/offers'
+        results = await self._requests('get', path)
+        return results
+
+    async def lending_info(self):
+        path = f'/spot_margin/lending_info'
+        results = await self._requests('get', path)
+        return results
+
+    async def submit_lending_offer(self):
+        path = f'/spot_margin/offers'
+        results = await self._requests('post', path)
+        return results
+
+    async def funding_payments(self, start_time, end_time, future):
+        path = f'/funding_payments'
+        params = {
+            'start_time': start_time,
+            'end_time': end_time,
+            'future': future
+        }
+        results = await self._requests('get', path, params)
+        return results
+
+    async def list_leverage_tokens(self):
+        path = f'/lt/tokens'
+        results = await self._requests('get', path)
+        return results
+
+    async def token_info(self, token_name):
+        path = f'/lt/{token_name}'
+        results = await self._requests('get', path)
+        return results
+
+    async def leverage_token_balances(self):
+        path = f'/lt/balances'
+        results = await self._requests('get', path)
+        return results
+
+    async def list_leverage_token_creation_requests(self):
+        path = f'/lt/creations'
+        results = await self._requests('get', path)
+        return results
+
+    async def request_leverage_token_creation(self, token_name, size):
+        path = f'/lt/{token_name}/create'
+        params = {
+            'size': size
+        }
+        results = await self._requests('post', path, params)
+        return results
+
+    async def list_leverage_token_redemption_requests(self):
+        path = f'/lt/redemptions'
+        results = await self._requests('get', path)
+        return results
+
+    async def request_leverage_token_redemption(self, token_name, size):
+        path = f'/lt/{token_name}/redeem'
+        params = {
+            'size': size
+        }
+        results = await self._requests('post', path, params)
+        return results
+
+    async def option_open_interest(self):
+        path = f'/options/open_interest/BTC'
+        results = await self._requests('get', path)
+        return results
+
     async def acount_options_info(self):
         path = f'/options/account_info'
         results = await self._requests('get', path)
         return results
 
+    async def option_open_interest_history(self, start_time, end_time, limit):
+        """
+
+        :param start_time: int
+        :param end_time: int
+        :param limit: int # max 200
+        :return:
+        """
+        path = f'options/historical_open_interest/BTC'
+        params = {
+            'start_time': start_time,
+            'end_time': end_time,
+            'limit': limit
+        }
+        results = await self._requests('get', path, params)
+        return results
+
+    async def option_open_interest_volume(self, start_time, end_time, limit):
+        """
+
+        :param start_time: int
+        :param end_time: int
+        :param limit: int # max 200
+        :return:
+        """
+        path = f'/options/historical_volumes/BTC'
+        params = {
+            'start_time': start_time,
+            'end_time': end_time,
+            'limit': limit
+        }
+        results = await self._requests('get', path, params)
+        return results
+
+    async def stakes(self):
+        path = f'/staking/stakes'
+        results = await self._requests('get', path)
+        return results
+
+    async def get_unstake_request(self):
+        path = f'/staking/unstake_requests'
+        results = await self._requests('get', path)
+        return results
+
+    async def stake_balances(self):
+        path = f'/staking/balances'
+        results = await self._requests('get', path)
+        return results
+
+    async def post_unstake_request(self, coin, size):
+        path = f'/staking/unstake_requests'
+        params = {
+            'coin': coin,
+            'size': size
+        }
+        results = await self._requests('post', path, params)
+        return results
+
+    async def cancel_unstake_request(self, request_id):
+        path = f'/staking/unstake_requests/{request_id}'
+        results = await self._requests('delete', path)
+        return results
+
+    async def get_staking_rewards(self):
+        path = f'/staking/staking_rewards'
+        results = await self._requests('get', path)
+        return results
+
+    async def stake_request(self, coin, size):
+        path = f'/srm_stakes/stakes'
+        params = {
+            'coin': coin,
+            'size': size
+        }
+        results = await self._requests('post', path, params)
+        return results
+
     # Websocket API
     async def ws(self, subscribe, channel_name, market_name):
-        params = {'op': subscribe, 'channel': channel_name, 'market': market_name},
-        await self._requests('ws', params)
+        """
+
+        :param subscribe: str # subscribe, unsubscribe
+        :param channel_name: str # orderbook, trades, ticker
+        :param market_name: str # e.g.)BTC-PERP
+        :return:
+        """
+        params = {'op': subscribe, 'channel': channel_name, 'market': market_name}
+        await self._requests(method='ws', params=params)
+
+    async def handler(self, msg, *ws):
+        return msg
+        # return await msg
 
 
 async def debug():
@@ -382,9 +639,8 @@ async def debug():
     # post method
     # print(await ftx.change_leverage(1))
     # subscribe
-    await ftx.ws('unsubscribe', 'ticker', 'BTC-PERP')
-    # await ftx.ws('subscribe', 'trades', 'BTC-PERP')
-
+    # await ftx.ws('unsubscribe', 'ticker', 'BTC-PERP')
+    await ftx.ws('subscribe', 'trades', 'BTC-PERP')
 
 if __name__ == '__main__':
     asyncio.run(debug())
