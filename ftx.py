@@ -365,7 +365,7 @@ class FTX(object):
         return results
 
     async def place_order(
-            self, market, side, price, type_, size, reduce_only=False, ioc=False, post_only=False, client_id=None
+            self, market, side, type_, size, price=None, reduce_only=False, ioc=False, post_only=False, client_id=None
     ):
         path = f'/orders'
         params = {
@@ -378,6 +378,8 @@ class FTX(object):
             'ioc': ioc,
             'postOnly': post_only
         }
+        if type_ == 'market':
+            params['price'] == None
         if client_id is not None:
             params['clientId'] = client_id
         results = await self._requests('post', path, params)
@@ -657,8 +659,8 @@ class FTX(object):
         return msg
 
 
-# async def debug():
-#     ftx = FTX('BOT') # Todo: Your sub-account name
+async def debug():
+    ftx = FTX('BOT_04') # Todo: Your sub-account name
     # get method
     # print(await ftx.trades('ETH-PERP'))
     # print(await ftx.account())
@@ -669,7 +671,7 @@ class FTX(object):
     # print(await ftx.change_leverage(1))
     # subscribe
     # await ftx.ws('unsubscribe', 'ticker', 'BTC-PERP')
-    # await ftx.ws('subscribe', 'trades', 'BTC-PERP')
+    await ftx.ws('subscribe', 'trades', 'BTC-PERP')
 
-# if __name__ == '__main__':
-#     asyncio.run(debug())
+if __name__ == '__main__':
+    asyncio.run(debug())
