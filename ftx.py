@@ -371,7 +371,7 @@ class FTX(object):
         params = {
             'market': market,  # BTC-PERP
             'side': side,  # buy or sell
-            'price': price,  # Send 'null' for market order
+            'price': price,  # Send 'None' for market order
             'type': type_,  # limit or market
             'size': size,
             'reduceOnly': reduce_only,
@@ -379,14 +379,48 @@ class FTX(object):
             'postOnly': post_only
         }
         if type_ == 'market':
-            params['price'] == None
+            params['price'] = None
         if client_id is not None:
             params['clientId'] = client_id
         results = await self._requests('post', path, params)
         return results
 
-    async def place_trigger_order(self, market, side, size, type_, reduce_only=False, retry_unit_filled=False):
-        pass
+    async def place_trigger_order(
+            self, market, side, size, type_='stop', reduce_only=None, retry_unit_filled=None,
+            trigger_price=None, order_price=None, trail_value=None
+    ):
+        path = f'/conditional_orders'
+        params = {
+            'market': market,
+            'side': side,  # buy or sell
+            'size': size,
+            'type': type_  # stop, trailingStop or takeProfit
+        }
+        if reduce_only is None:
+            params['reduceOnly'] = False
+        if type_ == 'stop' or type_ == 'takeProfit':
+            if trigger_price is None:
+                raise TypeError(f'trigger_price is None')
+            else:
+                params['triggerPrice'] = trigger_price
+            if order_price is None:
+                if retry_unit_filled is None:
+                    params['retryUntilFilled'] = True
+                else:
+                    params['retryUntilFilled'] = False
+            else:
+                params['orderPrice'] = order_price
+                if retry_unit_filled is None:
+                    params['retryUntilFilled'] = True
+                else:
+                    params['retryUntilFilled'] = False
+        elif type_ == 'trailingStop':
+            if trigger_price is None:
+                raise TypeError('trail_value is None')
+            else:
+                params['trailValue'] = trail_value  # negative(-) for 'sell', positive(+) for 'buy'
+        results = await self._requests('post', path, params)
+        return results
 
     async def order_stats(self, order_id):
         path = f'/orders/{order_id}'
@@ -660,7 +694,7 @@ class FTX(object):
 
 
 async def debug():
-    ftx = FTX('BOT_04') # Todo: Your sub-account name
+    ftx = FTX('BOT_04')  # Todo: Your sub-account name
     # get method
     # print(await ftx.trades('ETH-PERP'))
     # print(await ftx.account())
@@ -672,6 +706,7 @@ async def debug():
     # subscribe
     # await ftx.ws('unsubscribe', 'ticker', 'BTC-PERP')
     await ftx.ws('subscribe', 'trades', 'BTC-PERP')
+
 
 if __name__ == '__main__':
     asyncio.run(debug())
