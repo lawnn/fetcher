@@ -295,7 +295,7 @@ class FTX(object):
         :param limit: int # max 5000
         :return: dict
         """
-        path = f'orders/history'
+        path = f'/orders/history'
         params = {
             'market': market
         }
@@ -604,7 +604,7 @@ class FTX(object):
         :param limit: int # max 200
         :return:
         """
-        path = f'options/historical_open_interest/BTC'
+        path = f'/options/historical_open_interest/BTC'
         params = {}
         if limit is not None:
             params['limit'] = limit
