@@ -131,3 +131,13 @@ dmypy.json
 # User setting
 .idea/
 apis.json
+
+# user data
+*.json
+*.csv
+*.log.*
+*.png
+*.html
+
+# default config
+!*_default.json
