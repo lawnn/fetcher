@@ -2,5 +2,6 @@
   "line_notify_token" : "",
   "discordWebhook" : "",
   "ftx": ["API_KEY","API_SECRET"],
-  "bybit": ["API_KEY", "API_SECRET"]
+  "bybit": ["API_KEY", "API_SECRET"],
+  "gmocoin": ["API_KEY", "API_SECRET"]
 }
