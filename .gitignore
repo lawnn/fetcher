@@ -138,6 +138,7 @@ apis.json
 *.log.*
 *.png
 *.html
+example.*
 
 # default config
 !*_default.json
