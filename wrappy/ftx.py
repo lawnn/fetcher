@@ -1,6 +1,6 @@
 import pybotters
 import asyncio
-from pyrobot.base import BotBase
+from wrappy.base import BotBase
 
 
 class FTX(BotBase):

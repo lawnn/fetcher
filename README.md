@@ -1,9 +1,9 @@
-# pyrobot
+# wrappy
 For crypto currency botter.
 
 ## Installation
 ```
-pip install -U git+https://github.com/lawnn/pyrobot.git
+pip install -U git+https://github.com/lawnn/wrappy.git
 ```
 ## Setting(config_default.json)
 任意のjsonファイルを作成する。
@@ -19,14 +19,14 @@ pip install -U git+https://github.com/lawnn/pyrobot.git
 
 ## Example1    
 ```
-from pyrobot import FTX
+from wrappy import FTX
 ftx = FTX('上で作ったjsonファイルpath', market_name)
 ```
 ## Example2
 ```
 import asyncio
 import os
-from pyrobot import FTX
+from wrappy import FTX
 
 
 async def main(configPath, symbol):
