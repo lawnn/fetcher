@@ -14,7 +14,23 @@ class GMO(BotBase):
             data = await r.json()
             return data
 
-    async def account(self):
+    async def account_margin(self):
+        """
+        余力情報を取得
+        :return:
+        {
+          "status": 0,
+          "data": {
+            "actualProfitLoss": "5204923",  時価評価総額
+            "availableAmount": "5189523",   取引余力
+            "margin": "7298",               拘束証拠金
+            "marginCallStatus": "NORMAL",   追証ステータス: NORMAL MARGIN_CALL LOSSCUT
+            "marginRatio": "345.6",         証拠金維持率
+            "profitLoss": "8019"            評価損益
+          },
+          "responsetime": "2019-03-19T02:15:06.051Z"
+        }
+        """
         count = 0
         while True:
             req = await self._requests('GET', '/private/v1/account/margin')
@@ -24,9 +40,335 @@ class GMO(BotBase):
                 count += 1
                 await asyncio.sleep(1)
                 if count == 60:
-                    self.statusNotify("API request failed in account status.")
+                    self.statusNotify("API request failed in account margin.")
                     self.statusNotify(str(req))
-                    raise Exception("API request failed in account status.")
+                    raise Exception("API request failed in account margin.")
+
+    async def account_assets(self):
+        """
+        資産残高を取得
+        :return:
+        {
+          "status": 0,
+          "data": [
+            {
+              "amount": "993982448",      残高
+              "available": "993982448",   利用可能金額（残高 - 出金予定額）
+              "conversionRate": "1",      円転レート（販売所での売却価格です）
+              "symbol": "JPY"             ※取引所（現物取引）の取扱銘柄のみAPIでご注文いただけます。
+            },
+            {
+              "amount": "4.0002",           残高
+              "available": "4.0002",        利用可能金額（残高 - 出金予定額）
+              "conversionRate": "859614",   円転レート（販売所での売却価格です）
+              "symbol": "BTC"               ※取引所（現物取引）の取扱銘柄のみAPIでご注文いただけます。
+            }
+          ],
+          "responsetime": "2019-03-19T02:15:06.055Z"
+        }
+        """
+        count = 0
+        while True:
+            req = await self._requests('GET', '/private/v1/account/assets')
+            if req['status'] == 0:
+                return req['data']
+            else:
+                count += 1
+                await asyncio.sleep(1)
+                if count == 60:
+                    self.statusNotify("API request failed in account assets.")
+                    self.statusNotify(str(req))
+                    raise Exception("API request failed in account assets.")
+
+    async def orders(self, orderId):
+        """
+        注文情報取得
+        :return:
+        {
+          "status": 0,
+          "data": {
+            "list": [
+              {
+                "orderId": 223456789,       親注文ID
+                "rootOrderId": 223456789,   注文ID
+                "symbol": "BTC_JPY",
+                "side": "BUY",
+                "orderType": "NORMAL",      取引区分: NORMAL LOSSCUT
+                "executionType": "LIMIT",   注文タイプ: MARKET LIMIT STOP
+                "settleType": "OPEN",       決済区分: OPEN CLOSE
+                "size": "0.02",             発注数量
+                "executedSize": "0.02",     約定数量
+                "price": "1430001",         注文価格 (MARKET注文の場合は"0")
+                "losscutPrice": "0",        ロスカットレート (現物取引や未設定の場合は"0")
+                "status": "EXECUTED",       注文ステータス: WAITING ORDERED MODIFYING CANCELLING CANCELED EXECUTED EXPIRED
+                                            ※逆指値注文の場合はWAITINGが有効
+                "timeInForce": "FAS",       執行数量条件: FAK FAS FOK (Post-onlyの場合はSOK)
+                "timestamp": "2020-10-14T20:18:59.343Z"
+              },
+              {
+                "rootOrderId": 123456789,
+                "orderId": 123456789,
+                "symbol": "BTC",
+                "side": "BUY",
+                "orderType": "NORMAL",
+                "executionType": "LIMIT",
+                "settleType": "OPEN",
+                "size": "1",
+                "executedSize": "0",
+                "price": "900000",
+                "losscutPrice": "0",
+                "status": "CANCELED",
+                "cancelType": "USER",
+                "timeInForce": "FAS",
+                "timestamp": "2019-03-19T02:15:06.059Z"
+              }
+            ]
+          },
+          "responsetime": "2019-03-19T02:15:06.059Z"
+        }
+        """
+        params = {"orderId": f'{orderId}'}
+        count = 0
+        while True:
+            req = await self._requests('GET', '/private/v1/orders', params=params)
+            if req['status'] == 0:
+                return req['data']
+            else:
+                count += 1
+                await asyncio.sleep(1)
+                if count == 60:
+                    self.statusNotify("API request failed in orders.")
+                    self.statusNotify(str(req))
+                    raise Exception("API request failed in orders.")
+
+    async def active_orders(self, symbol: str, page: int = 1, count: int = 100):
+        """
+        有効注文一覧
+        :return:
+        {
+          "status": 0,
+          "data": {
+            "pagination": {
+              "currentPage": 1,
+              "count": 30
+            },
+            "list": [
+              {
+                "rootOrderId": 123456789,   親注文ID
+                "orderId": 123456789,       注文ID
+                "symbol": "BTC",
+                "side": "BUY",
+                "orderType": "NORMAL",
+                "executionType": "LIMIT",
+                "settleType": "OPEN",
+                "size": "1",                発注数量
+                "executedSize": "0",        約定数量
+                "price": "840000",
+                "losscutPrice": "0",
+                "status": "ORDERED",
+                "timeInForce": "FAS",
+                "timestamp": "2019-03-19T01:07:24.217Z"
+              }
+            ]
+          },
+          "responsetime": "2019-03-19T01:07:24.217Z"
+        }
+        """
+        params = {"symbol": symbol, "page": page, "count": count}
+        count = 0
+        while True:
+            req = await self._requests('GET', '/private/v1/activeOrders', params=params)
+            if req['status'] == 0:
+                return req['data']
+            else:
+                count += 1
+                await asyncio.sleep(1)
+                if count == 60:
+                    self.statusNotify("API request failed in active orders.")
+                    self.statusNotify(str(req))
+                    raise Exception("API request failed in active orders.")
+
+    async def executions(self, executionId):
+        """
+        約定情報取得
+        orderId executionId いずれか一つが必須です。2つ同時には設定できません。
+        :return:
+        {
+          "status": 0,
+          "data": {
+            "list": [
+              {
+                "executionId": 92123912,
+                "orderId": 223456789,
+                "positionId": 1234567,
+                "symbol": "BTC_JPY",
+                "side": "BUY",
+                "settleType": "OPEN",
+                "size": "0.02",
+                "price": "1900000",
+                "lossGain": "0",
+                "fee": "223",
+                "timestamp": "2020-11-24T21:27:04.764Z"
+              },
+              {
+                "executionId": 72123911,
+                "orderId": 123456789,
+                "positionId": 1234567,
+                "symbol": "BTC",
+                "side": "BUY",
+                "settleType": "OPEN",
+                "size": "0.7361",
+                "price": "877404",
+                "lossGain": "0",
+                "fee": "323",
+                "timestamp": "2019-03-19T02:15:06.081Z"
+              }
+            ]
+          },
+          "responsetime": "2019-03-19T02:15:06.081Z"
+        }
+        """
+        # params = {"orderId	": orderId}
+        params = {"executionId": f'{executionId}'}
+        count = 0
+        while True:
+            req = await self._requests('GET', '/private/v1/executions', params=params)
+            if req['status'] == 0:
+                return req['data']
+            else:
+                count += 1
+                await asyncio.sleep(1)
+                if count == 60:
+                    self.statusNotify("API request failed in executions.")
+                    self.statusNotify(str(req))
+                    raise Exception("API request failed in executions.")
+
+    async def latest_executions(self, symbol: str, page: int = 1, count: int = 100):
+        """
+        最新の約定一覧
+        直近1日分の約定情報を返します。
+        :return:
+        {
+          "status": 0,
+          "data": {
+            "pagination": {
+              "currentPage": 1,
+              "count": 30
+            },
+            "list": [
+              {
+                "executionId": 72123911,
+                "orderId": 123456789,
+                "positionId": 1234567,
+                "symbol": "BTC",
+                "side": "BUY",
+                "settleType": "OPEN",
+                "size": "0.7361",
+                "price": "877404",
+                "lossGain": "0",        決済損益
+                "fee": "323",           取引手数料
+                                        ※Takerの場合はプラスの値、Makerの場合はマイナスの値が返ってきます。
+                "timestamp": "2019-03-19T02:15:06.086Z"
+              }
+            ]
+          },
+          "responsetime": "2019-03-19T02:15:06.086Z"
+        }
+        """
+        params = {"symbol": symbol, "page": page, "count": count}
+        count = 0
+        while True:
+            req = await self._requests('GET', '/private/v1/latestExecutions', params=params)
+            if req['status'] == 0:
+                return req['data']
+            else:
+                count += 1
+                await asyncio.sleep(1)
+                if count == 60:
+                    self.statusNotify("API request failed in latest executions.")
+                    self.statusNotify(str(req))
+                    raise Exception("API request failed in latest executions.")
+
+    async def open_positions(self, symbol: str, page: int = 1, count: int = 100):
+        """
+        建玉一覧を取得
+        有効建玉一覧を取得します。
+        :return:
+        {
+          "status": 0,
+          "data": {
+            "pagination": {
+              "currentPage": 1,
+              "count": 30
+            },
+            "list": [
+              {
+                "positionId": 1234567,
+                "symbol": "BTC_JPY",
+                "side": "BUY",
+                "size": "0.22",
+                "orderdSize": "0",      発注中数量
+                "price": "876045",
+                "lossGain": "14",
+                "leverage": "4",
+                "losscutPrice": "766540",
+                "timestamp": "2019-03-19T02:15:06.094Z"
+              }
+            ]
+          },
+          "responsetime": "2019-03-19T02:15:06.095Z"
+        }
+        """
+        params = {"symbol": symbol, "page": page, "count": count}
+        count = 0
+        while True:
+            req = await self._requests('GET', '/private/v1/openPositions', params=params)
+            if req['status'] == 0:
+                return req['data']
+            else:
+                count += 1
+                await asyncio.sleep(1)
+                if count == 60:
+                    self.statusNotify("API request failed in open positions.")
+                    self.statusNotify(str(req))
+                    raise Exception("API request failed in open positions.")
+
+    async def position_summary(self, symbol: str):
+        """
+        建玉サマリーを取得
+        指定した銘柄の建玉サマリーを売買区分(買/売)ごとに取得ができます
+        symbolパラメータ指定無しの場合は、保有している全銘柄の建玉サマリーを売買区分(買/売)ごとに取得します。
+        :return:
+        {
+          "status": 0,
+          "data": {
+            "list": [
+              {
+                "averagePositionRate": "715656",    平均建玉レート
+                "positionLossGain": "250675",       評価損益
+                "side": "BUY",                      売買区分: BUY SELL
+                "sumOrderQuantity": "2",            発注中数量
+                "sumPositionQuantity": "11.6999",   建玉数量
+                "symbol": "BTC_JPY"
+              }
+            ]
+          },
+          "responsetime": "2019-03-19T02:15:06.102Z"
+        }
+        """
+        params = {"symbol": symbol}
+        count = 0
+        while True:
+            req = await self._requests('GET', '/private/v1/positionSummary', params=params)
+            if req['status'] == 0:
+                return req['data']
+            else:
+                count += 1
+                await asyncio.sleep(1)
+                if count == 60:
+                    self.statusNotify("API request failed in position summary.")
+                    self.statusNotify(str(req))
+                    raise Exception("API request failed in position summary.")
 
     async def replace_order(self, side: str, size: float, _type: str, price: float = None, create_order: bool = None,
                             positionId: int = None):
@@ -82,9 +424,9 @@ class GMO(BotBase):
         :param size:
         :param price:
         :return:
-                   {"status": 0,
-                    "data": "637000", (orderID)
-                    "responsetime": "2019-03-19T02:15:06.108Z"}
+           {"status": 0,
+            "data": "637000", (orderID)
+            "responsetime": "2019-03-19T02:15:06.108Z"}
         """
         count = 0
         while True:
@@ -106,9 +448,9 @@ class GMO(BotBase):
         :param size:
         :param positionId:
         :return:
-                    {"status": 0,
-                    "data": "637000", (orderID)
-                    "responsetime": "2019-03-19T02:15:06.108Z"}
+            {"status": 0,
+            "data": "637000", (orderID)
+            "responsetime": "2019-03-19T02:15:06.108Z"}
         """
         count = 0
         while True:
@@ -154,9 +496,9 @@ class GMO(BotBase):
         :param side:
         :param size:
         :return:
-                   {"status": 0,
-                    "data": "637000", (orderID)
-                    "responsetime": "2019-03-19T02:15:06.108Z"}
+           {"status": 0,
+            "data": "637000", (orderID)
+            "responsetime": "2019-03-19T02:15:06.108Z"}
         """
         count = 0
         while True:
@@ -173,14 +515,15 @@ class GMO(BotBase):
 
     async def collective_settlement_order_limit(self, side: str, size: float, price: float):
         """
-        一括指値決済注文
+        一括決済注文
+        一括決済注文をします。
         :param side:
         :param size:
         :param price:
         :return:
-                   {"status": 0,
-                    "data": "637000", (orderID)
-                    "responsetime": "2019-03-19T02:15:06.108Z"}
+           {"status": 0,
+            "data": "637000",       orderID
+            "responsetime": "2019-03-19T02:15:06.108Z"}
         """
         count = 0
         while True:
@@ -201,12 +544,16 @@ class GMO(BotBase):
         :param order_id:
         :return:
         "result": "Order queued for cancelation"
+        {
+          "status": 0,
+          "responsetime": "2019-03-19T01:07:24.557Z"
+        }
         """
         count = 0
         while True:
             req = await self._requests('POST', '/private/v1/cancelOrder', data={'orderId': order_id})
             if req['status'] == 0:
-                return req['data']
+                return req['responsetime']
             else:
                 count += 1
                 await asyncio.sleep(1)
@@ -234,7 +581,7 @@ class GMO(BotBase):
                   "message_code": "ERR-5122",
                   "message_string": "The request is invalid due to the status of the specified order.",
                   "orderId": 2
-                }
+                }
               ],
               "success": [3,4]
           },
@@ -250,9 +597,9 @@ class GMO(BotBase):
                 count += 1
                 await asyncio.sleep(1)
                 if count == 60:
-                    self.statusNotify("API request failed in cancel all orders.")
+                    self.statusNotify("API request failed in cancel any orders.")
                     self.statusNotify(str(req))
-                    raise Exception("API request failed in cancel all orders.")
+                    raise Exception("API request failed in cancel any orders.")
 
     async def cancel_all_orders(self, side: str = None):
         """
@@ -272,7 +619,7 @@ class GMO(BotBase):
         while True:
             req = await self._requests('POST', '/private/v1/cancelBulkOrder', data=data)
             if req['status'] == 0:
-                return req['data']
+                return req
             else:
                 count += 1
                 await asyncio.sleep(1)
@@ -287,12 +634,16 @@ class GMO(BotBase):
         :param orderId:
         :param price:
         :return:
+        {
+          "status": 0,
+          "responsetime": "2019-03-19T01:07:24.557Z"
+        }
         """
         count = 0
         while True:
             req = await self._requests('POST', '/private/v1/changeOrder', data={"orderId": orderId, "price": price})
             if req['status'] == 0:
-                return req['data']
+                return req['responsetime']
             else:
                 count += 1
                 await asyncio.sleep(1)
