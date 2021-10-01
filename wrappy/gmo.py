@@ -685,8 +685,7 @@ class GMO(BotBase):
         try:
             req = await self._access_token('POST')
             dt = int(datetime.fromisoformat(req['responsetime'].replace('Z', '')).timestamp())
-            req = {'data': req['data'], 'timestamp': dt}
-            return req
+            return {'data': req['data'], 'timestamp': dt}
         except Exception as e:
             print(e)
 
@@ -696,8 +695,8 @@ class GMO(BotBase):
         延長前の残り有効期限に関わらず、新しい有効期限は60分となります。
         :return: 1552929306     Timestamp
         """
-        data = {"token": token}
-        await self._requests('PUT', data=data)
+
+        await self._requests('PUT', data={"token": token})
         return int(datetime.fromisoformat(req['responsetime'].replace('Z', '')).timestamp())
 
     async def delete_access_token(self, token: str):
@@ -706,6 +705,6 @@ class GMO(BotBase):
         botが止まった時に使用します。
         :return: 1552929306     Timestamp
         """
-        data = {"token": token}
-        await self._requests('DELETE', data=data)
+
+        await self._requests('DELETE', data={"token": token})
         return int(datetime.fromisoformat(req['responsetime'].replace('Z', '')).timestamp())
