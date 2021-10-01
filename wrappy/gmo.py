@@ -1,5 +1,6 @@
 import pybotters
 import asyncio
+from datetime import datetime
 from wrappy.base import BotBase
 
 
@@ -665,3 +666,46 @@ class GMO(BotBase):
                 self.statusNotify("API request failed in historical.")
                 self.statusNotify(str(req))
                 raise Exception("API request failed in historical.")
+
+    async def _access_token(self, method: str, data: dict = None):
+        return await self._requests(method, '/private/v1/ws-auth', data=data)
+
+    async def get_access_token(self):
+        """
+        Private WebSocket API用のアクセストークンを取得します。
+            有効期限は60分です。
+            アクセストークンは最大5個まで発行できます。
+            発行上限を超えた場合、有効期限の近いトークンから順に削除されます。
+        :return:
+        {
+          "data": "xxxxxxxxxxxxxxxxxxxx",
+          "timestamp": 1552929306
+        }
+        """
+        try:
+            req = await self._access_token('POST')
+            dt = int(datetime.fromisoformat(req['responsetime'].replace('Z', '')).timestamp())
+            req = {'data': req['data'], 'timestamp': dt}
+            return req
+        except Exception as e:
+            print(e)
+
+    async def extension_access_token(self, token: str):
+        """
+        Private WebSocket API用のアクセストークンを延長します。
+        延長前の残り有効期限に関わらず、新しい有効期限は60分となります。
+        :return: 1552929306     Timestamp
+        """
+        data = {"token": token}
+        await self._requests('PUT', data=data)
+        return int(datetime.fromisoformat(req['responsetime'].replace('Z', '')).timestamp())
+
+    async def delete_access_token(self, token: str):
+        """
+        Private WebSocket API用のアクセストークンを削除します。
+        botが止まった時に使用します。
+        :return: 1552929306     Timestamp
+        """
+        data = {"token": token}
+        await self._requests('DELETE', data=data)
+        return int(datetime.fromisoformat(req['responsetime'].replace('Z', '')).timestamp())
