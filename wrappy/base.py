@@ -24,7 +24,7 @@ class Notify(object):
             # 設定されていなければNoneにしておく
             self.discordWebhook = None
 
-    def lineNotify(self, message, fileName=None):
+    def _lineNotify(self, message, fileName=None):
         payload = {'message': message}
         headers = {'Authorization': 'Bearer ' + self.line_notify_token}
         if fileName is None:
@@ -40,7 +40,7 @@ class Notify(object):
                 pass
 
     # config.json内の[discordWebhook]で指定されたDiscordのWebHookへの通知
-    def discordNotify(self, message, fileName=None):
+    def _discordNotify(self, message, fileName=None):
         payload = {"content": " " + message + " "}
         if fileName is None:
             try:
@@ -57,10 +57,10 @@ class Notify(object):
     def statusNotify(self, message, fileName=None):
         # config.json内に[discordWebhook]が設定されていなければLINEへの通知
         if self.discordWebhook is None:
-            self.lineNotify(message, fileName)
+            self._lineNotify(message, fileName)
         else:
             # config.json内に[discordWebhook]が設定されていればDiscordへの通知
-            self.discordNotify(message, fileName)
+            self._discordNotify(message, fileName)
 
 
 class BotBase(Notify):

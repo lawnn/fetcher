@@ -682,12 +682,19 @@ class GMO(BotBase):
           "timestamp": 1552929306
         }
         """
-        try:
+        count = 0
+        while True:
             req = await self._access_token('POST')
             dt = int(datetime.fromisoformat(req['responsetime'].replace('Z', '')).timestamp())
-            return {'data': req['data'], 'timestamp': dt}
-        except Exception as e:
-            print(e)
+            if req['status'] == 0:
+                return {'data': req['data'], 'timestamp': dt}
+            else:
+                count += 1
+                await asyncio.sleep(1)
+                if count == 60:
+                    self.statusNotify("API request failed in get access token.")
+                    self.statusNotify(str(req))
+                    raise Exception("API request failed in get access token.")
 
     async def extension_access_token(self, token: str):
         """
@@ -695,9 +702,18 @@ class GMO(BotBase):
         延長前の残り有効期限に関わらず、新しい有効期限は60分となります。
         :return: 1552929306     Timestamp
         """
-
-        await self._requests('PUT', data={"token": token})
-        return int(datetime.fromisoformat(req['responsetime'].replace('Z', '')).timestamp())
+        count = 0
+        while True:
+            req = await self._access_token('PUT', data={"token": token})
+            if req['status'] == 0:
+                return int(datetime.fromisoformat(req['responsetime'].replace('Z', '')).timestamp())
+            else:
+                count += 1
+                await asyncio.sleep(1)
+                if count == 60:
+                    self.statusNotify("API request failed in extension access token.")
+                    self.statusNotify(str(req))
+                    raise Exception("API request failed in extension access token.")
 
     async def delete_access_token(self, token: str):
         """
@@ -705,6 +721,15 @@ class GMO(BotBase):
         botが止まった時に使用します。
         :return: 1552929306     Timestamp
         """
-
-        await self._requests('DELETE', data={"token": token})
-        return int(datetime.fromisoformat(req['responsetime'].replace('Z', '')).timestamp())
+        count = 0
+        while True:
+            req = await self._access_token('DELETE', data={"token": token})
+            if req['status'] == 0:
+                return int(datetime.fromisoformat(req['responsetime'].replace('Z', '')).timestamp())
+            else:
+                count += 1
+                await asyncio.sleep(1)
+                if count == 60:
+                    self.statusNotify("API request failed in delete access token.")
+                    self.statusNotify(str(req))
+                    raise Exception("API request failed in delete access token.")
