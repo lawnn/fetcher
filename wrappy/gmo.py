@@ -411,12 +411,15 @@ class GMO(BotBase):
             if req['status'] == 0:
                 return req['data']
             else:
-                count += 1
-                await asyncio.sleep(1)
-                if count == 60:
-                    self.statusNotify("API request failed in market order.")
-                    self.statusNotify(str(req))
-                    raise Exception("API request failed in market order.")
+                if req['messages'][0]['message_code'] == 'ERR-5121':
+                    self.statusNotify(str(req['messages'][0]['message_string']))
+                else:
+                    count += 1
+                    await asyncio.sleep(1)
+                    if count == 60:
+                        self.statusNotify("API request failed in market order.")
+                        self.statusNotify(str(req))
+                        raise Exception("API request failed in market order.")
 
     async def order_limit(self, side: str, size: float, price: float):
         """
@@ -435,12 +438,15 @@ class GMO(BotBase):
             if req['status'] == 0:
                 return req['data']
             else:
-                count += 1
-                await asyncio.sleep(1)
-                if count == 60:
-                    self.statusNotify("API request failed in limit order.")
-                    self.statusNotify(str(req))
-                    raise Exception("API request failed in limit order.")
+                if req['messages'][0]['message_code'] == 'ERR-5121':
+                    self.statusNotify(str(req['messages'][0]['message_string']))
+                else:
+                    count += 1
+                    await asyncio.sleep(1)
+                    if count == 60:
+                        self.statusNotify("API request failed in limit order.")
+                        self.statusNotify(str(req))
+                        raise Exception("API request failed in limit order.")
 
     async def settle_market(self, side: str, size: float, positionId: int):
         """
