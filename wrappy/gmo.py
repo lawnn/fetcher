@@ -19,10 +19,9 @@ class GMO(BotBase):
                 err_list = ['ERR-189', 'ERR-201', 'ERR-5003', 'ERR-5121']
                 err_code = data['messages'][0]['message_code']
                 err_msg = str(data['messages'][0]['message_string'])
-                self.statusNotify('[Error code] https://api.coin.z.com/docs/#error-code')
                 if err_code in err_list:
-                    self.statusNotify(f'[{err_code}] {err_msg}')
-                    raise Exception(f'[{err_code}] {err_msg} https://api.coin.z.com/docs/#error-code')
+                    self.statusNotify(f'[Error code] https://api.coin.z.com/docs/#error-code\n[{err_code}] {err_msg}')
+                    raise Exception(f'[Error code] https://api.coin.z.com/docs/#error-code\n[{err_code}] {err_msg}')
                 else:
                     return data
 
