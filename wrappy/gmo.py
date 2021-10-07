@@ -13,7 +13,18 @@ class GMO(BotBase):
         async with pybotters.Client(apis=self.apis, base_url='https://api.coin.z.com') as client:
             r = await client.request(method, url=url, params=params, data=data)
             data = await r.json()
-            return data
+            if data['status'] == 0:
+                return data
+            else:
+                err_list = ['ERR-189', 'ERR-201', 'ERR-5003', 'ERR-5121']
+                err_code = data['messages'][0]['message_code']
+                err_msg = str(data['messages'][0]['message_string'])
+                self.statusNotify('[Error code] https://api.coin.z.com/docs/#error-code')
+                if err_code in err_list:
+                    self.statusNotify(f'[{err_code}] {err_msg}')
+                    raise Exception(f'[{err_code}] {err_msg} https://api.coin.z.com/docs/#error-code')
+                else:
+                    return data
 
     async def account_margin(self):
         """
@@ -411,15 +422,12 @@ class GMO(BotBase):
             if req['status'] == 0:
                 return req['data']
             else:
-                if req['messages'][0]['message_code'] == 'ERR-5121':
-                    self.statusNotify(str(req['messages'][0]['message_string']))
-                else:
-                    count += 1
-                    await asyncio.sleep(1)
-                    if count == 60:
-                        self.statusNotify("API request failed in market order.")
-                        self.statusNotify(str(req))
-                        raise Exception("API request failed in market order.")
+                count += 1
+                await asyncio.sleep(1)
+                if count == 60:
+                    self.statusNotify("API request failed in market order.")
+                    self.statusNotify(str(req))
+                    raise Exception("API request failed in market order.")
 
     async def order_limit(self, side: str, size: float, price: float):
         """
@@ -438,15 +446,12 @@ class GMO(BotBase):
             if req['status'] == 0:
                 return req['data']
             else:
-                if req['messages'][0]['message_code'] == 'ERR-5121':
-                    self.statusNotify(str(req['messages'][0]['message_string']))
-                else:
-                    count += 1
-                    await asyncio.sleep(1)
-                    if count == 60:
-                        self.statusNotify("API request failed in limit order.")
-                        self.statusNotify(str(req))
-                        raise Exception("API request failed in limit order.")
+                count += 1
+                await asyncio.sleep(1)
+                if count == 60:
+                    self.statusNotify("API request failed in limit order.")
+                    self.statusNotify(str(req))
+                    raise Exception("API request failed in limit order.")
 
     async def settle_market(self, side: str, size: float, positionId: int):
         """
