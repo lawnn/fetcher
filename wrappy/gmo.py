@@ -16,7 +16,8 @@ class GMO(BotBase):
             if data['status'] == 0:
                 return data
             else:
-                err_list = ['ERR-189', 'ERR-201', 'ERR-5003', 'ERR-5121']
+                err_list = ['ERR-189', 'ERR-201', 'ERR-208', 'ERR-254', 'ERR-430', 'ERR-554', 'ERR-635', 'ERR-682',
+                            'ERR-683', 'ERR-5003', 'ERR-5010', 'ERR-5012', 'ERR-5014', 'ERR-5111', 'ERR-5121']
                 err_code = data['messages'][0]['message_code']
                 err_msg = str(data['messages'][0]['message_string'])
                 if err_code in err_list:
