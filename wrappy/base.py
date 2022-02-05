@@ -94,6 +94,7 @@ class Log(object):
 class Notify(Log):
     def __init__(self, path):
         super().__init__(path)
+        self._initialize_logger()
 
         # ラインに稼働状況を通知
         self.line_notify_token = self.config["line_notify_token"]
@@ -153,4 +154,3 @@ class Notify(Log):
 class BotBase(Notify):
     def __init__(self, path):
         super().__init__(path)
-        self._initialize_logger()
