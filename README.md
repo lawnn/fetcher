@@ -43,10 +43,33 @@ log_debug('ここに何か書く')
 # discordかlineに通知
 statusNotify('ここに何か書く')
 ```
-## 使用例(GMOの場合)      
-100ETHで0.001lotの買い指値        
-config.jsonは同じディレクトリに置いた場合のコード
+## 使用例1(log,Notify出力)     
+```buildoutcfg
+import asyncio
+import os
+from wrappy import BotBase
+
+
+async def main(configPath):
+    bot = BotBase(configPath)
+    bot.log_error('error')
+    bot.log_warning('warning')
+    bot.log_debug('debug')
+    bot.log_info('info')
+    bot.statusNotify('notify test')
+
+if __name__ == '__main__':
+    try:
+        if os.name == 'nt':
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        asyncio.run(main('config.json'))
+    except KeyboardInterrupt:
+        pass
 ```
+## 使用例2(GMOの場合)      
+100BTCで0.001lotの買い指値        
+config.jsonは同じディレクトリに置いた場合のコード
+```buildoutcfg
 import asyncio
 import os
 from wrappy import GMO
@@ -56,7 +79,7 @@ async def main(configPath, symbol):
     bot = GMO(configPath, symbol)
     bot.log_info('starting bot...')
     
-    # 100ETHで0.001lotの買い指値
+    # 100BTCで0.001lotの買い指値
     r = await bot.limit('buy', 0.001, 100)
     bot.log_info(r)
 
