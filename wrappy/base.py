@@ -111,6 +111,7 @@ class Notify(Log):
         if fileName is None:
             try:
                 requests.post(self.line_notify_api, data=payload, headers=headers)
+                self.log_info(message)
             except Exception as e:
                 self.log_error(e)
                 pass
@@ -128,6 +129,7 @@ class Notify(Log):
         if fileName is None:
             try:
                 requests.post(self.discordWebhook, data=payload)
+                self.log_info(message)
             except Exception as e:
                 self.log_error(e)
                 pass
