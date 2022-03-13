@@ -69,6 +69,13 @@ class Log(object):
         """
         self.logger.error(message)
 
+    def log_exception(self, message):
+        """
+        Exceptionレベルのログを出力します.
+        :param message: ログメッセージ.
+        """
+        self.logger.exception(message)
+
     def log_warning(self, message):
         """
         WARNINGレベルのログを出力します.
