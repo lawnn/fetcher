@@ -118,10 +118,29 @@ class Util:
 
     @classmethod
     def trades_to_historical(cls, df, period: str = '1S'):
-        df_ohlcv = pd.concat([df["price"].resample(period).ohlc().ffill(),
-                              df["size"].resample(period).sum(), ], axis=1)
-        df_ohlcv.columns = ['open', 'high', 'low', 'close', 'volume']
-        return df_ohlcv
+        if 'side' in df.columns:
+            df['side'] = df['side'].mask(df['side'] == 'Buy', 'buy')
+            df['side'] = df['side'].mask(df['side'] == 'BUY', 'buy')
+            df['side'] = df['side'].mask(df['side'] == 'OrderSide.BUY', 'buy')
+            df['side'] = df['side'].mask(df['side'] == 'Sell', 'sell')
+            df['side'] = df['side'].mask(df['side'] == 'SELL', 'sell')
+            df['side'] = df['side'].mask(df['side'] == 'OrderSide.SELL', 'sell')
+
+            df["buyVol"] = np.where(df['side'] == 'buy', df['size'], 0)
+            df["sellVol"] = np.where(df['side'] == 'sell', df['size'], 0)
+            df_ohlcv = pd.concat([df["price"].resample(period).ohlc().ffill(),
+                                  df["size"].resample(period).sum(),
+                                  df["buyVol"].resample(period).sum(),
+                                  df["sellVol"].resample(period).sum()
+                                  ], axis=1)
+            df_ohlcv.columns = ['open', 'high', 'low', 'close', 'volume', 'buyVol', 'sellVol']
+            return df_ohlcv
+        else:
+            df_ohlcv = pd.concat([df["price"].resample(period).ohlc().ffill(),
+                                  df["size"].resample(period).sum(),
+                                  ], axis=1)
+            df_ohlcv.columns = ['open', 'high', 'low', 'close', 'volume']
+            return df_ohlcv
 
     @classmethod
     def ftx_get_historical(cls, start_ymd: str, end_ymd: str = None, symbol: str = 'BTC-PERP', resolution: int = 60,
