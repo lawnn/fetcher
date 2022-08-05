@@ -69,8 +69,7 @@ class Util:
         sigma_a = sigma_y * np.sqrt(N / (N * Nx2 - Nx ** 2))
         sigma_b = sigma_y * np.sqrt(Nx2 / (N * Nx2 - Nx ** 2))
 
-        ab = np.polyfit(arr1, arr2, 1)
-        y2 = ab[0] * arr1 + ab[1]
+        y2 = a * arr1 + b
 
         fig = plt.figure()
         fig.suptitle(title)
