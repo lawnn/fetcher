@@ -142,6 +142,43 @@ class Util:
             return df_ohlcv
 
     @classmethod
+    def ftx_get_trades(cls, market_name: str, start_time: float = None, end_time: float = None):
+        """
+        market_name (str): BTC/USD
+        start_time (float, optional): 2022-08-18 00:00:00
+        end_time (float, optional): 2022-08-19 00:00:00
+
+        Returns:
+            DataFrame
+        """
+
+        def trades_ftx(market: str, start: str = None, end=None):
+            res = requests.get(f'https://ftx.com/api/markets/{market}/trades',
+                               params={'start_time': start, 'end_time': end}).json()
+            return pd.DataFrame(res['result']).set_index('time')
+
+        JST = 32400  # timezone Asia/Tokyo
+        if isinstance(start_time, str):
+            start_time.replace('/', '-').replace('T', ' ')
+            start_time = datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S").timestamp()
+
+        if isinstance(end_time, str):
+            end_time.replace('/', '-').replace('T', ' ')
+            end_time = datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S").timestamp()
+
+        df = trades_ftx(market=market_name, start=start_time, end=end_time)
+        t = datetime.strptime(df.index[-1], "%Y-%m-%dT%H:%M:%S.%f%z").timestamp()
+
+        while start_time <= t:
+            new_df = trades_ftx(market=market_name, start=start_time, end=t + JST)
+            df = pd.concat([df, new_df])
+            # %zにすると永遠に終わらないのであえて+00:00にしてJSTを足している.
+            t = datetime.strptime(df.index[-1], "%Y-%m-%dT%H:%M:%S.%f+00:00").timestamp()
+            time.sleep(0.03)
+
+        return df.drop_duplicates()
+
+    @classmethod
     def ftx_get_historical(cls, start_ymd: str, end_ymd: str = None, symbol: str = 'BTC-PERP', resolution: int = 60,
                            output_dir: str = None, request_interval: float = 0.035, update: bool = True) -> None:
         if output_dir is None:
