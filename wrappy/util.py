@@ -11,84 +11,6 @@ from matplotlib import pyplot as plt
 
 class Util:
     @classmethod
-    def get_unix_ms_from_date(cls, date):
-        return int(calendar.timegm(date.timetuple()) * 1000 + date.microsecond / 1000)
-
-    @classmethod
-    def get_first_trade_id_from_start_date(cls, symbol, from_date):
-        new_end_date = from_date + timedelta(seconds=60)
-        r = requests.get('https://fapi.binance.com/fapi/v1/aggTrades',
-                         params={
-                             "symbol": symbol,
-                             "startTime": cls.get_unix_ms_from_date(from_date),
-                             "endTime": cls.get_unix_ms_from_date(new_end_date)
-                         })
-
-        if r.status_code != 200:
-            print('somethings wrong!', r.status_code)
-            print('sleeping for 10s... will retry')
-            time.sleep(10)
-            cls.get_first_trade_id_from_start_date(symbol, from_date)
-
-        response = r.json()
-        if len(response) > 0:
-            return response[0]['a']
-        else:
-            raise Exception('no trades found')
-
-    @classmethod
-    def get_trades(cls, symbol, from_id):
-        r = requests.get("https://fapi.binance.com/fapi/v1/aggTrades",
-                         params={
-                             "symbol": symbol,
-                             "limit": 1000,
-                             "fromId": from_id
-                         })
-
-        if r.status_code != 200:
-            print('somethings wrong!', r.status_code)
-            print('sleeping for 10s... will retry')
-            time.sleep(10)
-
-        return r.json()
-
-    @classmethod
-    def trim(cls, df, to_date):
-        return df[df['T'] <= cls.get_unix_ms_from_date(to_date)]
-
-    @classmethod
-    def fetch_binance_trades(cls, symbol, from_date, to_date):
-        from_id = cls.get_first_trade_id_from_start_date(symbol, from_date)
-        current_time = 0
-        df = pd.DataFrame()
-
-        while current_time < cls.get_unix_ms_from_date(to_date):
-            try:
-                trades = cls.get_trades(symbol, from_id)
-
-                from_id = trades[-1]['a']
-                current_time = trades[-1]['T']
-
-                print(
-                    f'fetched {len(trades)} trades from id {from_id} @ {datetime.utcfromtimestamp(current_time / 1000.0)}')
-
-                df = pd.concat([df, pd.DataFrame(trades)])
-
-                # don't exceed request limits
-                time.sleep(0.1)
-            except Exception:
-                print('somethings wrong....... sleeping for 15s')
-                time.sleep(15)
-
-        df.drop_duplicates(subset='a', inplace=True)
-        df = cls.trim(df, to_date)
-        now = datetime.now().strftime('%Y-%m-%d')
-        filename = f'binance_{symbol}_{now}.csv'
-        df.to_csv(filename)
-
-        print(f'{filename} file created!')
-
-    @classmethod
     def plot_corrcoef(cls, arr1, arr2, output_dir: str = None, title: str = None, x: str = 'indicator',
                       y: str = 'Return', save_fig: bool = False):
         """
@@ -571,6 +493,84 @@ class Util:
             cur_dt += timedelta(days=1)
             if request_interval > 0:
                 time.sleep(request_interval)
+
+    @classmethod
+    def get_unix_ms_from_date(cls, date):
+        return int(calendar.timegm(date.timetuple()) * 1000 + date.microsecond / 1000)
+
+    @classmethod
+    def get_first_trade_id_from_start_date(cls, symbol, from_date):
+        new_end_date = from_date + timedelta(seconds=60)
+        r = requests.get('https://fapi.binance.com/fapi/v1/aggTrades',
+                         params={
+                             "symbol": symbol,
+                             "startTime": cls.get_unix_ms_from_date(from_date),
+                             "endTime": cls.get_unix_ms_from_date(new_end_date)
+                         })
+
+        if r.status_code != 200:
+            print('somethings wrong!', r.status_code)
+            print('sleeping for 10s... will retry')
+            time.sleep(10)
+            cls.get_first_trade_id_from_start_date(symbol, from_date)
+
+        response = r.json()
+        if len(response) > 0:
+            return response[0]['a']
+        else:
+            raise Exception('no trades found')
+
+    @classmethod
+    def get_trades(cls, symbol, from_id):
+        r = requests.get("https://fapi.binance.com/fapi/v1/aggTrades",
+                         params={
+                             "symbol": symbol,
+                             "limit": 1000,
+                             "fromId": from_id
+                         })
+
+        if r.status_code != 200:
+            print('somethings wrong!', r.status_code)
+            print('sleeping for 10s... will retry')
+            time.sleep(10)
+
+        return r.json()
+
+    @classmethod
+    def trim(cls, df, to_date):
+        return df[df['T'] <= cls.get_unix_ms_from_date(to_date)]
+
+    @classmethod
+    def fetch_binance_trades(cls, symbol, from_date, to_date):
+        from_id = cls.get_first_trade_id_from_start_date(symbol, from_date)
+        current_time = 0
+        df = pd.DataFrame()
+
+        while current_time < cls.get_unix_ms_from_date(to_date):
+            try:
+                trades = cls.get_trades(symbol, from_id)
+
+                from_id = trades[-1]['a']
+                current_time = trades[-1]['T']
+
+                print(
+                    f'fetched {len(trades)} trades from id {from_id} @ {datetime.utcfromtimestamp(current_time / 1000.0)}')
+
+                df = pd.concat([df, pd.DataFrame(trades)])
+
+                # don't exceed request limits
+                time.sleep(0.1)
+            except Exception:
+                print('somethings wrong....... sleeping for 15s')
+                time.sleep(15)
+
+        df.drop_duplicates(subset='a', inplace=True)
+        df = cls.trim(df, to_date)
+        now = datetime.now().strftime('%Y-%m-%d')
+        filename = f'binance_{symbol}_{now}.csv'
+        df.to_csv(filename)
+
+        print(f'{filename} file created!')
 
     @classmethod
     def binance_get_OI(cls, st_date: str, symbol: str = 'BTCUSDT', period: str = '5m', output_dir: str = None) -> None:
