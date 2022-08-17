@@ -550,11 +550,26 @@ class Util:
         return r.json()
 
     @classmethod
-    def trim(cls, df, to_date):
-        return df[df['T'] <= cls.datetime_to_ms(to_date)]
+    def binance_get_trades(cls, start_ymd: str, end_ymd: str = None,symbol: str = 'BTCUSDT', output_dir: str = None,
+                           request_interval: float = 0.5):
+        """binance 約定履歴
 
-    @classmethod
-    def binance_get_trades(cls, symbol, from_date, to_date):
+            start_ymd (str): 2022-08-08
+            symbol (str, optional): Defaults to 'BTCUSDT'.
+            end_ymd (str, optional): 指定しない場合はstartの1日後
+            output_dir (str, optional): アウトプット先のフォルダ
+            request_interval (float, optional): 待機時間
+        """
+        if output_dir is None:
+            output_dir = f'csv/binance/trades/{symbol}'
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        if end_ymd is None:
+            to_date = datetime.strptime(start_ymd, "%Y-%m-%d") + timedelta(days=1) - timedelta(microseconds=1)
+        else:
+            to_date = datetime.strptime(end_ymd, "%Y-%m-%d") - timedelta(microseconds=1)
+        from_date = datetime.strptime(start_ymd, "%Y-%m-%d")
         from_id = cls.binance_get_1st_id(symbol, from_date)
         current_time = 0
         df = pd.DataFrame()
@@ -572,18 +587,18 @@ class Util:
                 df = pd.concat([df, pd.DataFrame(trades)])
 
                 # don't exceed request limits
-                time.sleep(0.1)
+                time.sleep(request_interval)
             except Exception:
                 print('somethings wrong....... sleeping for 15s')
                 time.sleep(15)
 
         df.drop_duplicates(subset='a', inplace=True)
-        df = cls.trim(df, to_date)
-        now = datetime.now().strftime('%Y-%m-%d')
-        filename = f'binance_{symbol}_{now}.csv'
-        df.to_csv(filename)
+        # trim
+        df = df[df['T'] <= cls.datetime_to_ms(to_date)]
 
-        print(f'{filename} file created!')
+        df.to_csv(f'{output_dir}/{start_ymd}.csv')
+
+        print(f'{output_dir}/{start_ymd}.csv\nfile created!')
 
     @classmethod
     def binance_get_OI(cls, st_date: str, symbol: str = 'BTCUSDT', period: str = '5m', output_dir: str = None) -> None:
