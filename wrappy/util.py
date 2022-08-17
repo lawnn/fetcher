@@ -54,21 +54,30 @@ class Util:
 
         # 頻出する総和を先に計算
         N = len(arr2)
-        Nxy = np.sum([xi * yi for xi, yi in zip(arr1, arr2)])
-        Nx = np.sum([xi for xi, yi in zip(arr1, arr2)])
-        Ny = np.sum([yi for xi, yi in zip(arr1, arr2)])
-        Nx2 = np.sum([xi * xi for xi, yi in zip(arr1, arr2)])
+        # Nxy = np.sum([xi * yi for xi, yi in zip(arr1, arr2)])
+        # Nx = np.sum([xi for xi, yi in zip(arr1, arr2)])
+        # Ny = np.sum([yi for xi, yi in zip(arr1, arr2)])
+        # Nx2 = np.sum([xi * xi for xi, yi in zip(arr1, arr2)])
 
         # 係数
-        a = (N * Nxy - Nx * Ny) / (N * Nx2 - Nx ** 2)
-        b = (Nx2 * Ny - Nx * Nxy) / (N * Nx2 - Nx ** 2)
+        # a = (N * Nxy - Nx * Ny) / (N * Nx2 - Nx ** 2)
+        # b = (Nx2 * Ny - Nx * Nxy) / (N * Nx2 - Nx ** 2)
+        #
+        # Yの誤差
+        # sigma_y = np.sqrt(1 / (N - 2) * np.sum([(a * xi + b - yi) ** 2 for xi, yi in zip(arr1, arr2)]))
+        #
+        # 係数の誤差
+        # sigma_a = sigma_y * np.sqrt(N / (N * Nx2 - Nx ** 2))
+        # sigma_b = sigma_y * np.sqrt(Nx2 / (N * Nx2 - Nx ** 2))
+
+        p, cov = np.polyfit(arr1, arr2, 1, cov=True)
+        a = p[0]
+        b = p[1]
+        sigma_a = np.sqrt(cov[0, 0])
+        sigma_b = np.sqrt(cov[1, 1])
 
         # Yの誤差
         sigma_y = np.sqrt(1 / (N - 2) * np.sum([(a * xi + b - yi) ** 2 for xi, yi in zip(arr1, arr2)]))
-
-        # 係数の誤差
-        sigma_a = sigma_y * np.sqrt(N / (N * Nx2 - Nx ** 2))
-        sigma_b = sigma_y * np.sqrt(Nx2 / (N * Nx2 - Nx ** 2))
 
         y2 = a * arr1 + b
 
