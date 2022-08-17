@@ -152,11 +152,12 @@ class Util:
             return df_ohlcv
 
     @classmethod
-    def ftx_get_trades(cls, market_name: str, start_time: float = None, end_time: float = None):
-        """
-        market_name (str): BTC/USD
-        start_time (float, optional): 2022-08-18 00:00:00
-        end_time (float, optional): 2022-08-19 00:00:00
+    def ftx_get_trades(cls, symbol: str = 'BTC/USD', start_ymd: float = None, end_ymd: float = None,
+                       output_dir: str = None):
+        """ FTX 約定履歴
+        symbol (str): BTC/USD
+        start_ymd (float, optional): 2022-08-18
+        end_ymd (float, optional): 2022-08-19
 
         Returns:
             DataFrame
@@ -167,26 +168,38 @@ class Util:
                                params={'start_time': start, 'end_time': end}).json()
             return pd.DataFrame(res['result']).set_index('time')
 
-        JST = 32400  # timezone Asia/Tokyo
-        if isinstance(start_time, str):
-            start_time.replace('/', '-').replace('T', ' ')
-            start_time = datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S").timestamp()
+        print(f'start: {start_ymd} --> end: {end_ymd}')
+        if output_dir is None:
+            output_dir = f'csv/FTX/trades/{symbol}'
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
-        if isinstance(end_time, str):
-            end_time.replace('/', '-').replace('T', ' ')
-            end_time = datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S").timestamp()
+        start_time = start_ymd
+        if isinstance(start_ymd, str):
+            start_ymd.replace('/', '-').replace('T', ' ')
+            start_time = datetime.strptime(start_ymd, "%Y-%m-%d")
+            start_time = cls.datetime_to_timestamp(start_time)
 
-        df = trades_ftx(market=market_name, start=start_time, end=end_time)
-        t = datetime.strptime(df.index[-1], "%Y-%m-%dT%H:%M:%S.%f%z").timestamp()
+        if isinstance(end_ymd, str):
+            end_ymd.replace('/', '-').replace('T', ' ')
+            end_ymd = datetime.strptime(end_ymd, "%Y-%m-%d")
+            end_ymd = cls.datetime_to_timestamp(end_ymd)
 
-        while start_time <= t:
-            new_df = trades_ftx(market=market_name, start=start_time, end=t + JST)
+        df = trades_ftx(market=symbol, start=start_time, end=end_ymd)
+        current_time = datetime.strptime(df.index[-1], "%Y-%m-%dT%H:%M:%S.%f%z").timestamp()
+
+        while current_time > start_time + 3:
+            new_df = trades_ftx(market=symbol, start=start_time, end=current_time)
+            current_time = datetime.strptime(new_df.index[-1], "%Y-%m-%dT%H:%M:%S.%f%z").timestamp()
             df = pd.concat([df, new_df])
-            # %zにすると永遠に終わらないのであえて+00:00にしてJSTを足している.
-            t = datetime.strptime(df.index[-1], "%Y-%m-%dT%H:%M:%S.%f+00:00").timestamp()
-            time.sleep(0.03)
 
-        return df.drop_duplicates()
+            print(new_df.index[0])
+            time.sleep(0.1)
+
+        df = df.drop_duplicates()
+        df.to_csv(f'{output_dir}/{start_ymd}.csv')
+
+        print(f'{output_dir}/{start_ymd}.csv\nfile created!')
 
     @classmethod
     def ftx_get_historical(cls, start_ymd: str, end_ymd: str = None, symbol: str = 'BTC-PERP', resolution: int = 60,
@@ -550,7 +563,7 @@ class Util:
         return r.json()
 
     @classmethod
-    def binance_get_trades(cls, start_ymd: str, end_ymd: str = None,symbol: str = 'BTCUSDT', output_dir: str = None,
+    def binance_get_trades(cls, start_ymd: str, end_ymd: str = None, symbol: str = 'BTCUSDT', output_dir: str = None,
                            request_interval: float = 0.5):
         """binance 約定履歴
 
