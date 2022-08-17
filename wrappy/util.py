@@ -504,24 +504,28 @@ class Util:
                 time.sleep(request_interval)
 
     @classmethod
-    def get_unix_ms_from_date(cls, date):
+    def datetime_to_ms(cls, date):
         return int(calendar.timegm(date.timetuple()) * 1000 + date.microsecond / 1000)
 
     @classmethod
-    def get_first_trade_id_from_start_date(cls, symbol, from_date):
+    def datetime_to_timestamp(cls, date):
+        return int(calendar.timegm(date.timetuple()) + date.microsecond / 1000)
+
+    @classmethod
+    def binance_get_1st_id(cls, symbol, from_date):
         new_end_date = from_date + timedelta(seconds=60)
         r = requests.get('https://fapi.binance.com/fapi/v1/aggTrades',
                          params={
                              "symbol": symbol,
-                             "startTime": cls.get_unix_ms_from_date(from_date),
-                             "endTime": cls.get_unix_ms_from_date(new_end_date)
+                             "startTime": cls.datetime_to_ms(from_date),
+                             "endTime": cls.datetime_to_ms(new_end_date)
                          })
 
         if r.status_code != 200:
             print('somethings wrong!', r.status_code)
             print('sleeping for 10s... will retry')
             time.sleep(10)
-            cls.get_first_trade_id_from_start_date(symbol, from_date)
+            cls.binance_get_1st_id(symbol, from_date)
 
         response = r.json()
         if len(response) > 0:
@@ -530,7 +534,7 @@ class Util:
             raise Exception('no trades found')
 
     @classmethod
-    def get_trades(cls, symbol, from_id):
+    def binance_fetch_trades(cls, symbol, from_id):
         r = requests.get("https://fapi.binance.com/fapi/v1/aggTrades",
                          params={
                              "symbol": symbol,
@@ -547,17 +551,17 @@ class Util:
 
     @classmethod
     def trim(cls, df, to_date):
-        return df[df['T'] <= cls.get_unix_ms_from_date(to_date)]
+        return df[df['T'] <= cls.datetime_to_ms(to_date)]
 
     @classmethod
-    def fetch_binance_trades(cls, symbol, from_date, to_date):
-        from_id = cls.get_first_trade_id_from_start_date(symbol, from_date)
+    def binance_get_trades(cls, symbol, from_date, to_date):
+        from_id = cls.binance_get_1st_id(symbol, from_date)
         current_time = 0
         df = pd.DataFrame()
 
-        while current_time < cls.get_unix_ms_from_date(to_date):
+        while current_time < cls.datetime_to_ms(to_date):
             try:
-                trades = cls.get_trades(symbol, from_id)
+                trades = cls.binance_fetch_trades(symbol, from_id)
 
                 from_id = trades[-1]['a']
                 current_time = trades[-1]['T']
