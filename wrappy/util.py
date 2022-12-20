@@ -354,7 +354,7 @@ class Util:
 
         r = requests.get('https://api.bitflyer.com/v1/getexecutions', params=dict(product_code=symbol, count=500))
         data = r.json()
-        df = pd.DataFrame(data[::-1], dtype='float').set_index('exec_date')
+        df = pd.DataFrame(data[::-1]).set_index('exec_date')
         last_date = pd.to_datetime(df.index, utc=True).tz_localize(None)[-1]
         ID = data[-1]['id']
         count = 0
@@ -366,7 +366,7 @@ class Util:
             temp_r = requests.get('https://api.bitflyer.com/v1/getexecutions',
                                   params=dict(product_code=symbol, count=500, before=ID))
             temp_data = temp_r.json()
-            temp_df = pd.DataFrame(temp_data[::-1], dtype='float').set_index('exec_date')
+            temp_df = pd.DataFrame(temp_data[::-1]).set_index('exec_date')
             last_date = pd.to_datetime(temp_df.index, utc=True).tz_localize(None)[-1]
             ID = int(temp_data[-1]['id'])
             df = pd.concat([temp_df, df])
