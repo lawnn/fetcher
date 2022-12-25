@@ -70,7 +70,7 @@ class Util:
         # sigma_a = sigma_y * np.sqrt(N / (N * Nx2 - Nx ** 2))
         # sigma_b = sigma_y * np.sqrt(Nx2 / (N * Nx2 - Nx ** 2))
 
-        p, cov = np.polyfit(arr1, arr2, 1, cov=True)
+        p, cov, _ = np.polyfit(arr1, arr2, 1, cov=True)
         a = p[0]
         b = p[1]
         sigma_a = np.sqrt(cov[0, 0])
@@ -218,6 +218,7 @@ class Util:
     @classmethod
     def ftx_get_historical(cls, start_ymd: str, end_ymd: str = None, symbol: str = 'BTC-PERP', resolution: int = 60,
                            output_dir: str = None, request_interval: float = 0.035, update: bool = True) -> None:
+        df_old = []
         if output_dir is None:
             output_dir = f'./csv/FTX/ohlcv/{resolution}s'
         if not os.path.exists(output_dir):
@@ -413,6 +414,7 @@ class Util:
         :return:
         """
         start = time.time()
+        df_old = []
 
         if end_ymd is None:
             end_ymd = datetime.now()
@@ -615,8 +617,8 @@ class Util:
 
                 # don't exceed request limits
                 time.sleep(request_interval)
-            except Exception:
-                print('somethings wrong....... sleeping for 15s')
+            except Exception as e:
+                print(f'{e}\nsomethings wrong....... sleeping for 15s')
                 time.sleep(15)
 
         df.drop_duplicates(subset='a', inplace=True)
