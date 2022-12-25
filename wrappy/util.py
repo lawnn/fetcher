@@ -143,13 +143,27 @@ class Util:
                                   df["sellVol"].resample(period).sum()
                                   ], axis=1)
             df_ohlcv.columns = ['open', 'high', 'low', 'close', 'volume', 'buyVol', 'sellVol']
-            return df_ohlcv
+        elif 'm' in df.columns:
+            df['T'] = df['T'] / 1000
+            df['T'] = pd.to_datetime(df['T'].astype(int), unit='s', utc=True, infer_datetime_format=True)
+            df = df.set_index('T')
+            df.index = df.index.tz_localize(None)
+            df['m'] = df['m'].mask(df['m'] is True, 'buy')
+            df['m'] = df['m'].mask(df['m'] is False, 'sell')
+            df["buyVol"] = np.where(df['m'] == 'buy', df['q'], 0)
+            df["sellVol"] = np.where(df['m'] == 'sell', df['q'], 0)
+            df_ohlcv = pd.concat([df["p"].resample(period).ohlc().ffill(),
+                                  df["q"].resample(period).sum(),
+                                  df["buyVol"].resample(period).sum(),
+                                  df["sellVol"].resample(period).sum()
+                                  ], axis=1)
+            df_ohlcv.columns = ['open', 'high', 'low', 'close', 'volume', 'buyVol', 'sellVol']
         else:
             df_ohlcv = pd.concat([df["price"].resample(period).ohlc().ffill(),
                                   df["size"].resample(period).sum(),
                                   ], axis=1)
             df_ohlcv.columns = ['open', 'high', 'low', 'close', 'volume']
-            return df_ohlcv
+        return df_ohlcv
 
     @classmethod
     def ftx_get_trades(cls, symbol: str = 'BTC/USD', start_ymd: float = None, end_ymd: float = None,
