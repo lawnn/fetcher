@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import calendar
 from datetime import datetime, timedelta
+from pytz import utc
 from matplotlib import pyplot as plt
 
 
@@ -346,37 +347,37 @@ class Util:
         :param st_date: 2021/09/01 00:00:00     # start date
         :param end_date: 2021/09/10 00:00:00    # end date
         :param symbol: FX_BTC_JPY, BTC_JPY, ETH_JPY etc...
-        :return:
+        :param request_interval: 0.6
         """
 
         def bf_search_id(target_dt, count_id=14000):
             def bf_date_to_dt():
                 try:
-                    return datetime.strptime(response[0]["exec_date"] + "+0000", "%Y-%m-%dT%H:%M:%S.%f" + "%z")
+                    return datetime.strptime(_response[0]["exec_date"] + "+0000", "%Y-%m-%dT%H:%M:%S.%f" + "%z")
                 except ValueError:
-                    return datetime.strptime(response[0]["exec_date"] + "+0000", "%Y-%m-%dT%H:%M:%S" + "%z")
+                    return datetime.strptime(_response[0]["exec_date"] + "+0000", "%Y-%m-%dT%H:%M:%S" + "%z")
                 except KeyError as  e:
-                    print(response)
+                    print(_response)
                     print(e)
 
             target_dt = target_dt.replace('/', '-')
-            dt = datetime.strptime(target_dt + "+0000", "%Y-%m-%d %H:%M:%S" + "%z")
-            target_date = dt.astimezone(utc)
+            _dt = datetime.strptime(target_dt + "+0000", "%Y-%m-%d %H:%M:%S" + "%z")
+            target_date = _dt.astimezone(utc)
 
             # target_dateと現在時刻のおおまかな時間差
             hours = int((time.time() - target_date.timestamp()) / 3600) + 1
 
             # 最新約定履歴ID取得
-            params = dict(product_code=symbol, count=500)
-            response = requests.get("https://api.bitflyer.com/v1/getexecutions", params=params).json()
-            end_id = response[0]["id"]
+            _params = dict(product_code=symbol, count=500)
+            _response = requests.get("https://api.bitflyer.com/v1/getexecutions", params=_params).json()
+            _end_id = _response[0]["id"]
 
             # 二分探索開始ID設定
-            start_id = end_id - hours * count_id  # 平均count_id件/時間と仮定する
+            _start_id = _end_id - hours * count_id  # 平均count_id件/時間と仮定する
 
             # start_idの約定履歴を取得
-            params["before"] = start_id + 1
-            response = requests.get("https://api.bitflyer.com/v1/getexecutions", params=params).json()
+            _params["before"] = _start_id + 1
+            _response = requests.get("https://api.bitflyer.com/v1/getexecutions", params=_params).json()
 
             # start_idの約定日時(exec_date)をdatetime(UTC)変換
 
@@ -385,22 +386,22 @@ class Util:
             # target_dateより過去日時になるまでstart_idをずらす
             while start_date > target_date:
                 # 1時間分(count_id件)idを差し引いて約定履歴を再取得
-                start_id -= count_id
-                params["before"] = start_id + 1
-                response = requests.get("https://api.bitflyer.com/v1/getexecutions", params=params).json()
+                _start_id -= count_id
+                _params["before"] = _start_id + 1
+                _response = requests.get("https://api.bitflyer.com/v1/getexecutions", params=_params).json()
 
                 # start_idの約定日時(exec_date)をdatetime(UTC)変換
                 start_date = bf_date_to_dt()
                 time.sleep(request_interval)
 
             # 検索範囲が500件以下になるまで絞り込み
-            while end_id - start_id > 500:
+            while _end_id - _start_id > 500:
                 # idの中央値を算出
-                mid_id = int((start_id + end_id) / 2)
+                mid_id = int((_start_id + _end_id) / 2)
 
                 # 中央値の約定履歴を取得
-                params["before"] = mid_id + 1
-                response = requests.get("https://api.bitflyer.com/v1/getexecutions", params=params).json()
+                _params["before"] = mid_id + 1
+                _response = requests.get("https://api.bitflyer.com/v1/getexecutions", params=_params).json()
 
                 # 中央値の約定日時(exec_date)をdatetime(UTC)変換
                 mid_date = bf_date_to_dt()
@@ -408,19 +409,19 @@ class Util:
                 # mid_dateがtarget_dateの左右どちらかチェック
                 if mid_date < target_date:
                     # target_dateは中央値よりも右(未来)のため、start_idをずらす
-                    start_id = mid_id
+                    _start_id = mid_id
                 else:
                     # target_dateは中央値よりも左(過去)のため、end_idをずらす
-                    end_id = mid_id
+                    _end_id = mid_id
                 time.sleep(request_interval)
 
             # 絞り込んだend_idまでの約定履歴を取得
-            params["before"] = end_id + 1
-            response = requests.get("https://api.bitflyer.com/v1/getexecutions", params=params).json()
+            _params["before"] = _end_id + 1
+            _response = requests.get("https://api.bitflyer.com/v1/getexecutions", params=_params).json()
             time.sleep(request_interval)
 
             # 約定履歴リストは新→古順のため、反転する
-            execs = response[::-1]
+            execs = _response[::-1]
 
             # 指定時刻後の最初のIDを検索
             for ex in execs:
@@ -449,7 +450,7 @@ class Util:
         params["before"] = end_id
         response = requests.get('https://api.bitflyer.com/v1/getexecutions', params=params).json()
         end_base_id = end_id = response[0]['id']
-        new_percentage = percentage = 0
+        progress_time = new_percentage = percentage = 0
         time.sleep(request_interval)
 
         while start_id <= end_id:
@@ -478,9 +479,11 @@ class Util:
                 dt = dt.strftime('%Y-%m-%d')
                 path = f'{output_dir}/{dt}.csv'
                 path = path.replace('//', '/')
-                print(f'   Output --> {path}')
+                print(f'   Temp Output --> {path}')
                 df.to_csv(path)
-            response.extend(temp_r)
+            else:
+                response.extend(temp_r)
+
             time.sleep(request_interval)
 
         df = pd.DataFrame(response)

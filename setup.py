@@ -6,5 +6,5 @@ setup(
     version='0.1.0',
     author='lawn',
     url='https://github.com/lawnn/wrappy.git',
-    install_requires=['requests', 'asyncio', 'pybotters', 'matplotlib', 'pandas', 'numpy']
+    install_requires=['requests', 'asyncio', 'pybotters', 'matplotlib', 'pandas', 'numpy', 'pytz']
 )
