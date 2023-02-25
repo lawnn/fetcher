@@ -440,9 +440,11 @@ class Util:
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
+        st_date = st_date.replace('/', '-')
         start_id = bf_search_id(st_date)
         print(f'[start date] {st_date} [target id] {start_id}')
 
+        end_date = end_date.replace('/', '-')
         end_id = bf_search_id(end_date)
         print(f'[end date] {end_date} [target id] {end_id}')
 
@@ -463,13 +465,21 @@ class Util:
                 break
 
             if response[-1]["exec_date"][:13] != temp_r[-1]["exec_date"][:13]:
-                new_percentage = (end_base_id - end_id) / (end_base_id - start_id) * 100
+                try:
+                    new_percentage = (end_base_id - end_id) / (end_base_id - start_id) * 100
+                except ZeroDivisionError:
+                    new_percentage = 0
                 progress_time = temp_r[-1]["exec_date"][:19]
                 progress_time = progress_time.replace("T", " ")
 
             if percentage != new_percentage:
                 percentage = new_percentage
-                print("\r", f"Progress: {percentage:.1f}%   Current date: {progress_time}", end="")
+                try:
+                    print("\r", f"[Progress] {percentage:.1f}%  " +
+                          f"[Remaining time] {(((end_id - start_id) / 500 * request_interval) / 60):.2f}min  " +
+                          f"[Current date] {progress_time}  ", end="")
+                except ZeroDivisionError:
+                    pass
 
             if response[-1]["exec_date"][:10] != temp_r[-1]["exec_date"][:10]:
                 response.extend(temp_r)
@@ -477,9 +487,11 @@ class Util:
                 df = df[::-1]
                 dt = datetime.strptime(response[-1]["exec_date"][:10], '%Y-%m-%d') + timedelta(days=1)
                 dt = dt.strftime('%Y-%m-%d')
-                path = f'{output_dir}/{dt}.csv'
+                if not os.path.exists(output_dir + "/TEMP"):
+                    os.makedirs(output_dir + "/TEMP")
+                path = f'{output_dir}/TEMP/{dt}.csv'
                 path = path.replace('//', '/')
-                print(f'   Temp Output --> {path}')
+                print(f'Temp file --> {path}')
                 df.to_csv(path)
             else:
                 response.extend(temp_r)
@@ -488,9 +500,7 @@ class Util:
 
         df = pd.DataFrame(response)
         df = df[::-1]
-        dt = datetime.strptime(response[-1]["exec_date"][:10], '%Y-%m-%d') + timedelta(days=1)
-        dt = dt.strftime('%Y-%m-%d')
-        path = f'{output_dir}/{dt}-all.csv'
+        path = f'{output_dir}/{st_date[:10]}_{end_date[:10]}.csv'
         path = path.replace('//', '/')
         print(f'Output --> {path}')
         df.to_csv(path)
