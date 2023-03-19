@@ -2,7 +2,10 @@ import os
 import time
 import requests
 import pandas as pd
+import polars as pl
+from traceback import format_exc
 from datetime import datetime, timedelta
+from fetcher.util import  str_to_datetime
 
 
 def gmo_get_historical(start_ymd: str, end_ymd: str, symbol: str = 'BTC_JPY', interval: str = '1min',
@@ -48,3 +51,82 @@ def gmo_get_historical(start_ymd: str, end_ymd: str, symbol: str = 'BTC_JPY', in
         cur_dt += timedelta(days=1)
         if request_interval > 0:
             time.sleep(request_interval)
+
+
+def gmo_get_trades(start_ymd: str, end_ymd: str, symbol: str = 'BTC_JPY',
+                    period: str = '1s', price_pl_type: pl.PolarsDataType = pl.Float64,
+                    output_dir: str = None, request_interval: float = 0.01,
+                    progress_info: bool = True) -> None:
+
+    try:
+        # 出力ディレクトリ設定
+        if output_dir is None:
+            output_dir = f'./gmo/{symbol}/trades/'
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        # 取得期間
+        start_dt = str_to_datetime(start_ymd)
+        end_dt = str_to_datetime(end_ymd)
+        if start_dt > end_dt:
+            raise ValueError(f'end_ymd{end_ymd} should be after start_ymd{start_ymd}.')
+
+        print(f'output dir: {output_dir}  save term: {start_dt:%Y/%m/%d} -> {end_dt:%Y/%m/%d}')
+
+        # 日別にcsv出力
+        cur_dt = start_dt
+        total_count = 0
+        while cur_dt <= end_dt:
+            # csvパス
+            csv_path = os.path.join(output_dir, f"{cur_dt:%Y}-{cur_dt:%m}-{cur_dt:%d}.csv")
+            # csv存在チェック
+            if os.path.isfile(csv_path):
+                cur_dt += timedelta(days=1)
+                continue
+
+            try:
+                df = (
+                    pl.read_csv(f"https://api.coin.z.com/data/trades/{symbol}/{cur_dt:%Y}/{cur_dt:%m}/{cur_dt:%Y%m%d}_{symbol}.csv.gz")
+                    .with_columns([
+                                pl.col("timestamp").str.strptime(pl.Datetime).alias('datetime'),
+                                pl.col("price").cast(price_pl_type),
+                                pl.when(pl.col('side') == 'BUY').then(pl.col('size')).otherwise(0).alias('buy_size'),
+                                pl.when(pl.col('side') == 'SELL').then(pl.col('size')).otherwise(0).alias('sell_size')
+                                ])
+                                .groupby_dynamic('datetime', every=period)
+                                .agg([
+                                pl.col("price").first().alias('open'),
+                                pl.col("price").max().alias('high'),
+                                pl.col("price").min().alias('low'),
+                                pl.col("price").last().alias('close'),
+                                pl.col("size").sum().alias('volume'),
+                                pl.col('buy_size').sum().alias('buy_vol'),
+                                pl.col('sell_size').sum().alias('sell_vol'),
+                                ])
+                    )
+            except Exception as e:
+                print(f"{e}")
+                df = None
+
+            if df is None or len(df) < 1:
+                print(f"Failed to read the trading file.\n" +
+                      f"https://api.coin.z.com/data/trades/{symbol}/{cur_dt:%Y}/{cur_dt:%m}/{cur_dt:%Y%m%d}_{symbol}.csv.gz")
+                cur_dt += timedelta(days=1)
+                if request_interval > 0:
+                    time.sleep(request_interval)
+                continue
+
+            df.write_csv(csv_path)
+            total_count += 1
+            if progress_info:
+                print(f'Completed output {csv_path}.csv')
+
+            cur_dt += timedelta(days=1)
+            if request_interval > 0:
+                time.sleep(request_interval)
+
+        print(f'Total output files: {total_count}')
+
+    except Exception as e:
+        print(f'save_daily_ohlcv_from_gmo_trading_gz failed.\n{format_exc()}')
+        raise e

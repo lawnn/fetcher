@@ -1,6 +1,7 @@
 import calendar
 import numpy as np
 import pandas as pd
+from datetime import datetime
 
 
 def datetime_to_ms(date):
@@ -9,6 +10,12 @@ def datetime_to_ms(date):
 
 def datetime_to_timestamp(date):
     return int(calendar.timegm(date.timetuple()) + date.microsecond / 1000)
+
+def str_to_datetime(dt_str: str) -> datetime:
+    """
+    dt: "2023-01-01" or "2023/01/01"
+    """
+    return datetime.strptime(dt_str.replace("-", "/"), '%Y/%m/%d')
 
 
 def np_shift(arr, num=1, fill_value=np.nan):
