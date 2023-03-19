@@ -130,6 +130,7 @@ dmypy.json
 
 # User setting
 .idea/
+tests/
 apis.json
 
 # user data
