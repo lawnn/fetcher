@@ -53,7 +53,7 @@ def gmo_get_historical(start_ymd: str, end_ymd: str, symbol: str = 'BTC_JPY', in
             time.sleep(request_interval)
 
 
-def gmo_get_trades(start_ymd: str, end_ymd: str, symbol: str = 'BTC_JPY',
+def gmo_get_trades(start_ymd: str, end_ymd: str = None, symbol: str = 'BTC_JPY',
                     period: str = '1s', price_pl_type: pl.PolarsDataType = pl.Float64,
                     output_dir: str = None, request_interval: float = 0.01,
                     progress_info: bool = True) -> None:
@@ -67,7 +67,12 @@ def gmo_get_trades(start_ymd: str, end_ymd: str, symbol: str = 'BTC_JPY',
 
         # 取得期間
         start_dt = str_to_datetime(start_ymd)
-        end_dt = str_to_datetime(end_ymd)
+
+        if end_ymd is None:
+            end_dt = start_dt
+        else:
+            end_dt = str_to_datetime(end_ymd)
+
         if start_dt > end_dt:
             raise ValueError(f'end_ymd{end_ymd} should be after start_ymd{start_ymd}.')
 
