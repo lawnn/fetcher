@@ -19,11 +19,12 @@ def bitbank_get_trades(st_date: str, symbol: str = "btc_jpy", output_dir: str = 
 def bitbank_trades_to_historical(path: str, period: str = '1s') -> pl.DataFrame:
     return (
             pl.scan_csv(f"{path}")
-                .with_columns(
-                (pl.col("executed_at") * 1_000)
-                    .cast(pl.Datetime(time_unit='us'))
-                    .alias('datetime')
-                )
+                .with_columns([
+                (pl.col("executed_at") * 1_000).cast(pl.Datetime(time_unit='us')).alias('datetime'),
+                pl.col("amount").cast(pl.Float64, strict=False),
+                pl.when(pl.col('side') == 'buy').then(pl.col('amount')).otherwise(0).alias('buy_size'),
+                pl.when(pl.col('side') == 'sell').then(pl.col('amount')).otherwise(0).alias('sell_size')
+                ])
                 .groupby_dynamic('datetime', every=period)
                 .agg([
                 pl.col("price").first().alias('open'),
@@ -31,5 +32,7 @@ def bitbank_trades_to_historical(path: str, period: str = '1s') -> pl.DataFrame:
                 pl.col("price").min().alias('low'),
                 pl.col("price").last().alias('close'),
                 pl.col("amount").sum().alias('volume'),
+                pl.col('buy_size').sum().alias('buy_vol'),
+                pl.col('sell_size').sum().alias('sell_vol'),
                 ])
             ).collect()
