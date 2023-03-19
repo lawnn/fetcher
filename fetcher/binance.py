@@ -1,17 +1,9 @@
 import os
 import time
 import requests
-import calendar
 import pandas as pd
 from datetime import datetime, timedelta
-
-
-def datetime_to_ms(date):
-    return int(calendar.timegm(date.timetuple()) * 1000 + date.microsecond / 1000)
-
-
-def datetime_to_timestamp(date):
-    return int(calendar.timegm(date.timetuple()) + date.microsecond / 1000)
+from .util import datetime_to_ms
 
 
 def binance_get_1st_id(symbol, from_date):

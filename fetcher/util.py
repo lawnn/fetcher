@@ -1,5 +1,14 @@
+import calendar
 import numpy as np
 import pandas as pd
+
+
+def datetime_to_ms(date):
+    return int(calendar.timegm(date.timetuple()) * 1000 + date.microsecond / 1000)
+
+
+def datetime_to_timestamp(date):
+    return int(calendar.timegm(date.timetuple()) + date.microsecond / 1000)
 
 
 def np_shift(arr, num=1, fill_value=np.nan):
