@@ -5,7 +5,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 
-def gmo_get_historical(cls, start_ymd: str, end_ymd: str, symbol: str = 'BTC_JPY', interval: str = '1min',
+def gmo_get_historical(start_ymd: str, end_ymd: str, symbol: str = 'BTC_JPY', interval: str = '1min',
                        output_dir: str = None, request_interval: float = 0.2, progress_info: bool = True) -> None:
     """ example
     gmo_get_historical('2021/09/01', '2021/09/08')
