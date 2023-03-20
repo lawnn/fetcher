@@ -1,7 +1,8 @@
 import calendar
 import numpy as np
 import pandas as pd
-from datetime import datetime
+import polars as pl
+from datetime import datetime, timedelta
 
 
 def datetime_to_ms(date):
@@ -16,6 +17,19 @@ def str_to_datetime(dt_str: str) -> datetime:
     dt: "2023-01-01" or "2023/01/01"
     """
     return datetime.strptime(dt_str.replace("-", "/"), '%Y/%m/%d')
+
+
+def df_list(df: pl.DataFrame, start_date: datetime, interval: int, quantity: int, dt_col: str="") -> list:
+    # 日付リストを生成する
+    date_list = [start_date + timedelta(days=interval*i)
+                for i in range(quantity)
+                if start_date + timedelta(days=interval*i) <= df[dt_col].max()]
+
+    # DataFrameリストを生成する
+    return [df.filter((pl.col(dt_col).ge(start_date)) & (pl.col(dt_col).lt(end_date)))
+            for start_date, end_date in [(date_list[i], date_list[i+1])
+                for i in range(0, len(date_list)-1, interval)] + ([ (date_list[-2], date_list[-1]) ]
+                    if len(date_list) % interval != 1 else [])]
 
 
 def np_shift(arr, num=1, fill_value=np.nan):
