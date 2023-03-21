@@ -3,6 +3,7 @@ import time
 import requests
 import numpy as np
 import pandas as pd
+import  polars as pl
 from datetime import datetime
 from pytz import utc
 
@@ -232,3 +233,23 @@ def bf_get_trades(st_date: str, end_date: str, symbol: str = 'FX_BTC_JPY', outpu
     print(f'Output --> {path}')
 
     print(f'elapsed time: {(time.time() - start) / 60:.2f}min')
+
+
+def bf_trades_to_historical(path: str, price_pl_type: type = pl.Int64, period: str="1s") -> pl.DataFrame:
+    return (
+        pl.scan_csv(path)
+        .with_columns([pl.col("exec_date").str.strptime(pl.Datetime, strict=False).alias("datetime"),
+                       pl.col("price").cast(price_pl_type).alias("price"),
+                       pl.when(pl.col('side') == 'BUY').then(pl.col('size')).otherwise(0).alias('buy_size'),
+                       pl.when(pl.col('side') == 'SELL').then(pl.col('size')).otherwise(0).alias('sell_size')])
+        .groupby_dynamic('datetime', every=period)
+        .agg([
+            pl.col('price').first().alias('open'),
+            pl.col('price').max().alias('high'),
+            pl.col('price').min().alias('low'),
+            pl.col('price').last().alias('close'),
+            pl.col('size').sum().alias('volume'),
+            pl.col('buy_size').sum().alias('buy_vol'),
+            pl.col('sell_size').sum().alias('sell_vol'),
+        ])
+        ).collect()
