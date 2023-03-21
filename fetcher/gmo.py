@@ -53,10 +53,10 @@ def gmo_get_historical(start_ymd: str, end_ymd: str, symbol: str = 'BTC_JPY', in
             time.sleep(request_interval)
 
 
-def gmo_get_trades(start_ymd: str, end_ymd: str = None, symbol: str = 'BTC_JPY',
-                    period: str = '1s', price_pl_type: pl.PolarsDataType = pl.Float64,
-                    output_dir: str = None, request_interval: float = 0.01,
-                    progress_info: bool = True) -> None:
+def gmo_trades_to_historical(start_ymd: str, end_ymd: str = None, symbol: str = 'BTC_JPY',
+                            period: str = '1s', price_pl_type: pl.PolarsDataType = pl.Float64,
+                            output_dir: str = None, request_interval: float = 0.01,
+                            progress_info: bool = True) -> None:
 
     try:
         # 出力ディレクトリ設定
