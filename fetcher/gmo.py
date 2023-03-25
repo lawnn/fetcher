@@ -1,11 +1,10 @@
 import os
 import time
 import requests
-import pandas as pd
 import polars as pl
 from traceback import format_exc
 from datetime import datetime, timedelta
-from fetcher.util import  str_to_datetime
+from fetcher.util import str_to_datetime
 
 
 def gmo_get_historical(start_ymd: str, end_ymd: str, symbol: str = 'BTC_JPY', interval: str = '1min',
@@ -22,12 +21,14 @@ def gmo_get_historical(start_ymd: str, end_ymd: str, symbol: str = 'BTC_JPY', in
     :return:
     """
     if output_dir is None:
-        output_dir = f'./gmo/{symbol}/ohlcv/{interval}/'
+        output_dir = f'./gmo/{symbol}/ohlcv/{interval}'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    start_dt = datetime.strptime(start_ymd, '%Y/%m/%d')
-    end_dt = datetime.strptime(end_ymd, '%Y/%m/%d')
+    start_ymd = start_ymd.replace('/', '-')
+    end_ymd = end_ymd.replace('/', '-')
+    start_dt = datetime.strptime(start_ymd, '%Y-%m-%d')
+    end_dt = datetime.strptime(end_ymd, '%Y-%m-%d')
     if start_dt > end_dt:
         raise ValueError(f'end_ymd{end_ymd} should be after start_ymd{start_ymd}.')
 
@@ -37,13 +38,15 @@ def gmo_get_historical(start_ymd: str, end_ymd: str, symbol: str = 'BTC_JPY', in
     total_count = 0
     while cur_dt <= end_dt:
         r = requests.get(f'https://api.coin.z.com/public/v1/klines',
-                         params=dict(symbol=symbol, interval=interval, date=cur_dt.strftime('%Y%m%d')))
-        data = r.json()
-        df = pd.DataFrame(data['data'])
-        df.rename(columns={'openTime': 'time'}, inplace=True)
-        df = df.set_index('time')
-        df.index = pd.to_datetime(df.index, unit='ms', utc=True).tz_localize(None)
-        df.to_csv(f'{output_dir}/{cur_dt.strftime("%Y%m%d")}.csv')
+                         params=dict(symbol=symbol, interval=interval, date=cur_dt.strftime('%Y%m%d'))).json()
+        df = (
+            pl.DataFrame(r["data"])
+            .rename({"openTime": "datetime"})
+            .with_columns([
+                pl.col("datetime").cast(pl.Int64).map(lambda x: x * 1_000).cast(pl.Datetime(time_unit='us'))
+            ])
+        )
+        df.write_csv(f'{output_dir}/{cur_dt.strftime("%Y-%m-%d")}.csv')
         total_count += 1
         if progress_info:
             print(f'Completed output {cur_dt:%Y%m%d}.csv')
