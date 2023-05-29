@@ -75,8 +75,9 @@ def binance_get_trades(start_ymd: str, end_ymd: str = None, symbol: str = 'BTCUS
             from_id = trades[-1]['a']
             current_time = trades[-1]['T']
 
-            print(
-                f'fetched {len(trades)} trades from id {from_id} @ {datetime.utcfromtimestamp(current_time / 1000.0)}')
+            print("\r"+
+                f'fetched {len(trades)} trades from id {from_id} @ {datetime.utcfromtimestamp(current_time / 1000.0)}',
+                  end="")
 
             df = pd.concat([df, pd.DataFrame(trades)])
 
