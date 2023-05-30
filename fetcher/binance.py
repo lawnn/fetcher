@@ -56,7 +56,7 @@ def binance_get_trades(start_ymd: str, end_ymd: str = None, symbol: str = 'BTCUS
         request_interval (float, optional): 待機時間
     """
     if output_dir is None:
-        output_dir = f'csv/binance/trades/{symbol}'
+        output_dir = f'binance/trades/{symbol}'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -101,7 +101,7 @@ def binance_get_OI(st_date: str, symbol: str = 'BTCUSDT', period: str = '5m', ou
     start = time.time()
 
     if output_dir is None:
-        output_dir = f'csv/binance/OI/{symbol}'
+        output_dir = f'binance/OI/{symbol}'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -164,7 +164,7 @@ def binance_get_buy_sell_vol(st_date: str, symbol: str = 'BTCUSDT', period: str 
     start = time.time()
 
     if output_dir is None:
-        output_dir = f'csv/binance/volume/{symbol}'
+        output_dir = f'binance/volume/{symbol}'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
