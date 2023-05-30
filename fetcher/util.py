@@ -32,6 +32,65 @@ def df_list(df: pl.DataFrame, start_date: datetime, interval: int, quantity: int
                     if len(date_list) % interval != 1 else [])]
 
 
+def pl_merge(left, right, col):
+    return (left.join(right ,on=col, how="left")
+            .with_columns(pl.col("close").fill_null(strategy="forward").fill_null(strategy="backward"))
+            .with_columns([
+                pl.col("open").fill_null(pl.col("close")),
+                pl.col("high").fill_null(pl.col("close")),
+                pl.col("low").fill_null(pl.col("close")),
+                pl.col("volume").fill_null(0),
+                pl.col("buy_vol").fill_null(0),
+                pl.col("sell_vol").fill_null(0),
+            ]))
+
+
+def make_ohlcv(path: str, date_column_name: str, price_column_name: str,
+               size_column_name: str, side_column_name: str, buy, sell, time_frame, pl_type: pl.DataType) -> pl.DataFrame:
+    return (pl.scan_csv(path)
+            .with_columns([pl.col(date_column_name).str.strptime(pl.Datetime, strict=False).alias("datetime"),
+                        pl.col(price_column_name).cast(pl_type),
+                        pl.when(pl.col(side_column_name) == buy).then(pl.col(size_column_name)).otherwise(0).alias('buy_size'),
+                        pl.when(pl.col(side_column_name) == sell).then(pl.col(size_column_name)).otherwise(0).alias('sell_size')])
+            .groupby_dynamic('datetime', every=time_frame)
+            .agg([
+                pl.col(price_column_name).first().alias('open'),
+                pl.col(price_column_name).max().alias('high'),
+                pl.col(price_column_name).min().alias('low'),
+                pl.col(price_column_name).last().alias('close'),
+                pl.col(size_column_name).sum().alias('volume'),
+                pl.col('buy_size').sum().alias('buy_vol'),
+                pl.col('sell_size').sum().alias('sell_vol')
+                ])
+            .collect()
+            )
+
+
+def make_ohlcv_from_timestamp(path: str, date_column_name: str, price_column_name: str,
+                              size_column_name: str, side_column_name: str, buy, sell,
+                              time_frame, pl_type: pl.DataType, timestamp_multiplier: int) -> pl.DataFrame:
+    return (pl.scan_csv(path)
+            .with_columns([(pl.col(date_column_name) * timestamp_multiplier)
+                           .cast(pl.Datetime(time_unit='us')).alias("datetime"),
+                           pl.col(price_column_name).cast(pl_type),
+                           pl.when(pl.col(side_column_name) == buy)
+                           .then(pl.col(size_column_name)).otherwise(0).alias('buy_size'),
+                           pl.when(pl.col(side_column_name) == sell)
+                           .then(pl.col(size_column_name)).otherwise(0).alias('sell_size')])
+            .groupby_dynamic('datetime', every=time_frame)
+            .agg([
+                pl.col(price_column_name).first().alias('open'),
+                pl.col(price_column_name).max().alias('high'),
+                pl.col(price_column_name).min().alias('low'),
+                pl.col(price_column_name).last().alias('close'),
+                pl.col(size_column_name).sum().alias('volume'),
+                pl.col('buy_size').sum().alias('buy_vol'),
+                pl.col('sell_size').sum().alias('sell_vol')
+            ])
+            .collect()
+            )
+
+
 def np_shift(arr, num=1, fill_value=np.nan):
     result = np.empty_like(arr)
     if num > 0:
