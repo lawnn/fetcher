@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from .util import pl_merge
 
 
-def bybit_make_ohlcv(symbol: str, date: str, time_frame, pl_type) -> pl.DataFrame:
+def bybit_make_ohlcv(symbol: str, date: str, time_frame, pl_type: pl.PolarsDataType=pl.Float64) -> pl.DataFrame:
     """
     example
     bybit_make_ohlcv("BTCUSDT", "2023-05-26", "1s", pl.Float64)

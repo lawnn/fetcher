@@ -289,7 +289,7 @@ def bf_trades_to_historical(path: str, price_pl_type: type = pl.Int64, period: s
         ).collect()
 
 
-def bf_make_ohlcv(path: str, time_frame, pl_type) -> pl.DataFrame:
+def bf_make_ohlcv(path: str, time_frame, pl_type: pl.PolarsDataType=pl.Int64) -> pl.DataFrame:
     df = make_ohlcv(path, "exec_date", "price", "size", "side", "BUY", "SELL", time_frame, pl_type)
     start_dt = datetime.combine(df["datetime"][0].date(), datetime.min.time())
     end_dt = datetime.combine(df["datetime"][-1].date(), datetime.min.time()) + timedelta(days=1, seconds=-1)
