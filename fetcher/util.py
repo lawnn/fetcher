@@ -1,22 +1,7 @@
-import calendar
 import numpy as np
 import pandas as pd
 import polars as pl
 from datetime import datetime, timedelta
-
-
-def datetime_to_ms(date):
-    return int(calendar.timegm(date.timetuple()) * 1000 + date.microsecond / 1000)
-
-
-def datetime_to_timestamp(date):
-    return int(calendar.timegm(date.timetuple()) + date.microsecond / 1000)
-
-def str_to_datetime(dt_str: str) -> datetime:
-    """
-    dt: "2023-01-01" or "2023/01/01"
-    """
-    return datetime.strptime(dt_str.replace("-", "/"), '%Y/%m/%d')
 
 
 def df_list(df: pl.DataFrame, start_date: datetime, interval: int, quantity: int, dt_col: str="") -> list:

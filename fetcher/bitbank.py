@@ -4,7 +4,8 @@ import requests
 import polars as pl
 from traceback import format_exc
 from datetime import timedelta
-from fetcher.util import str_to_datetime
+from . import str_to_datetime
+
 
 def bitbank_get_trades(st_date: str, symbol: str = "btc_jpy", output_dir: str = None) -> None:
     dt = str(st_date).replace("/", "-")

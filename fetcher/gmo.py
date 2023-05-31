@@ -4,7 +4,7 @@ import requests
 import polars as pl
 from traceback import format_exc
 from datetime import datetime, timedelta
-from fetcher.util import str_to_datetime
+from fetcher import str_to_datetime
 
 
 def gmo_get_historical(start_ymd: str, end_ymd: str, symbol: str = 'BTC_JPY', interval: str = '1min',

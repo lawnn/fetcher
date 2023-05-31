@@ -6,7 +6,9 @@ import pandas as pd
 import  polars as pl
 from datetime import datetime, timedelta
 from pytz import utc
-from .util import str_to_datetime, make_ohlcv, pl_merge
+from .util import make_ohlcv, pl_merge
+from . import str_to_datetime
+
 
 def bf_get_historical(st_date: str, symbol: str = 'FX_BTC_JPY', period: str = 'm',
                       grouping: int = 1, output_dir: str = None) -> None:
