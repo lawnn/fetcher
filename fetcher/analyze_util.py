@@ -24,7 +24,7 @@ class Optimization(metaclass=ABCMeta):
         raise NotImplementedError
 
 
-def simple_regression(x: np.ndarray, y: np.ndarray, plot_graph=False, title: str = "Linear Regression",
+def simple_regression(x: np.ndarray, y: np.ndarray, plot_graph=False, title: str = "[Linear Regression]",
                       x_label: str = "x", y_label: str = "y", output_dir: str = None, save_fig: bool = False):
 
     ic = np.corrcoef(x, y)[0, 1]
