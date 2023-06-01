@@ -89,6 +89,15 @@ def np_shift(arr, num=1, fill_value=np.nan):
     return result
 
 
+def np_stack(x,y):
+    """
+    ndarrayを結合して欠損値があれば行を削除します
+    """
+    z = np.column_stack((x,y))
+    z = z[~np.isnan(z).any(axis=1)]
+    return z[:,0], z[:,1]
+
+
 def resample_ohlc(org_df, timeframe):
     df = org_df.resample(f'{timeframe * 60}S').agg(
         {'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'volume': 'sum'})
