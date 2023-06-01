@@ -29,14 +29,14 @@ def simple_regression(x: np.ndarray, y: np.ndarray, plot_graph=False, title: str
 
     ic = np.corrcoef(x, y)[0, 1]
     r2 = ic ** 2
-    if r2 == np.nan:
+    if np.isnan(r2):
         r2 = 0
 
     if not plot_graph:
         return r2
 
     N = len(x)
-    p, cov, _ = np.polyfit(x, y, 1, cov=True)
+    p, cov = np.polyfit(x, y, 1, cov=True)
     a = p[0]
     b = p[1]
     sigma_a = np.sqrt(cov[0, 0])
@@ -58,7 +58,7 @@ def simple_regression(x: np.ndarray, y: np.ndarray, plot_graph=False, title: str
 
     if save_fig:
         if output_dir is None:
-            output_dir = f'./png'
+            output_dir = './png'
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         plt.savefig(f'{output_dir}/{title}.png')
