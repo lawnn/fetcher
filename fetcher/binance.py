@@ -5,7 +5,7 @@ import pandas as pd
 import polars as pl
 from datetime import datetime, timedelta
 from .util import pl_merge, make_ohlcv_from_timestamp
-from . import datetime_to_ms
+from .time_util import datetime_to_ms
 
 
 def binance_get_1st_id(symbol, from_date):

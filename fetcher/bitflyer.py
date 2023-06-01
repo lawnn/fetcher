@@ -7,7 +7,7 @@ import  polars as pl
 from datetime import datetime, timedelta
 from pytz import utc
 from .util import make_ohlcv, pl_merge
-from . import str_to_datetime
+from .time_util import str_to_datetime
 
 
 def bf_get_historical(st_date: str, symbol: str = 'FX_BTC_JPY', period: str = 'm',
