@@ -69,6 +69,7 @@ def bitbank_trades_to_historical(start_ymd: str, end_ymd: str = None, symbol: st
                 pl.when(pl.col('side') == 'buy').then(pl.col('amount')).otherwise(0).alias('buy_size'),
                 pl.when(pl.col('side') == 'sell').then(pl.col('amount')).otherwise(0).alias('sell_size')
                 ])
+                .set_sorted("datetime")
                 .groupby_dynamic('datetime', every=period)
                 .agg([
                 pl.col("price").first().alias('open'),
@@ -79,7 +80,7 @@ def bitbank_trades_to_historical(start_ymd: str, end_ymd: str = None, symbol: st
                 pl.col('buy_size').sum().alias('buy_vol'),
                 pl.col('sell_size').sum().alias('sell_vol'),
                 ])
-            ).collect()
+                ).collect()
             except Exception as e:
                 print(f"{e}")
                 df = None

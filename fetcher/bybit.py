@@ -17,6 +17,7 @@ def bybit_make_ohlcv(symbol: str, date: str, time_frame, pl_type: pl.PolarsDataT
                             .then(pl.col("size")).otherwise(0).alias('buy_size'),
                             pl.when(pl.col("side") == "Sell")
                             .then(pl.col("size")).otherwise(0).alias('sell_size')])
+            .set_sorted("datetime")
             .groupby_dynamic('datetime', every=time_frame)
             .agg([
                 pl.col("price").first().alias('open'),

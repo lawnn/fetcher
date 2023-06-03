@@ -37,6 +37,7 @@ def make_ohlcv(path: str, date_column_name: str, price_column_name: str,
                         pl.col(price_column_name).cast(pl_type),
                         pl.when(pl.col(side_column_name) == buy).then(pl.col(size_column_name)).otherwise(0).alias('buy_size'),
                         pl.when(pl.col(side_column_name) == sell).then(pl.col(size_column_name)).otherwise(0).alias('sell_size')])
+            .set_sorted("datetime")
             .groupby_dynamic('datetime', every=time_frame)
             .agg([
                 pl.col(price_column_name).first().alias('open'),
@@ -62,6 +63,7 @@ def make_ohlcv_from_timestamp(path: str, date_column_name: str, price_column_nam
                            .then(pl.col(size_column_name)).otherwise(0).alias('buy_size'),
                            pl.when(pl.col(side_column_name) == sell)
                            .then(pl.col(size_column_name)).otherwise(0).alias('sell_size')])
+            .set_sorted("datetime")
             .groupby_dynamic('datetime', every=time_frame)
             .agg([
                 pl.col(price_column_name).first().alias('open'),

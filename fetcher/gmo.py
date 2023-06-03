@@ -165,6 +165,7 @@ def gmo_trades_to_historical(start_ymd: str, end_ymd: str = None, symbol: str = 
                                 pl.when(pl.col('side') == 'BUY').then(pl.col('size')).otherwise(0).alias('buy_size'),
                                 pl.when(pl.col('side') == 'SELL').then(pl.col('size')).otherwise(0).alias('sell_size')
                                 ])
+                                .set_sorted("datetime")
                                 .groupby_dynamic('datetime', every=period)
                                 .agg([
                                 pl.col("price").first().alias('open'),
