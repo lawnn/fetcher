@@ -5,7 +5,7 @@ import polars as pl
 from traceback import format_exc
 from datetime import datetime, timedelta
 from .time_util import str_to_datetime
-from .util import make_ohlcv
+from .util import make_ohlcv, pl_merge
 
 
 def gmo_get_historical(start_ymd: str, end_ymd: str, symbol: str = 'BTC_JPY', interval: str = '1min',
@@ -186,3 +186,26 @@ def gmo_trades_to_historical(start_ymd: str, end_ymd: str = None, symbol: str = 
     except Exception as e:
         print(f'save_daily_ohlcv_from_gmo_trading_gz failed.\n{format_exc()}')
         raise e
+
+
+def gmo_make_ohlcv(date: str, symbol: str = 'BTC_JPY',
+                   time_frame: str = '1s', pl_type: pl.PolarsDataType = pl.Float64,):
+    # 取得期間
+    dt = str_to_datetime(date)
+    after = dt + timedelta(days=1)
+
+    df1 = make_ohlcv(f"https://api.coin.z.com/data/trades/{symbol}/{dt:%Y}/{dt:%m}/{dt:%Y%m%d}_{symbol}.csv.gz",
+                            "timestamp", "price", "size", "side", "BUY", "SELL", time_frame, pl_type)
+    df2 = make_ohlcv(f"https://api.coin.z.com/data/trades/{symbol}/{after:%Y}/{after:%m}/{after:%Y%m%d}_{symbol}.csv.gz",
+                            "timestamp", "price", "size", "side", "BUY", "SELL", time_frame, pl_type)
+    df = (
+        pl.concat([df1, df2])
+        .lazy()
+        .filter((pl.col("datetime").ge(dt)) & (pl.col("datetime").lt(after)))
+        .collect()
+        )
+    start_dt = datetime.combine(df["datetime"][0].date(), datetime.min.time())
+    end_dt = datetime.combine(df["datetime"][-1].date(), datetime.min.time()) + timedelta(days=1, seconds=-1)
+    dt_range = pl.DataFrame({'datetime': pl.date_range(start_dt, end_dt, time_frame, eager=True)})
+    return pl_merge(dt_range, df, "datetime")
+
