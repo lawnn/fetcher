@@ -5,6 +5,7 @@ import polars as pl
 from traceback import format_exc
 from datetime import datetime, timedelta
 from .time_util import str_to_datetime
+from .util import make_ohlcv
 
 
 def gmo_get_historical(start_ymd: str, end_ymd: str, symbol: str = 'BTC_JPY', interval: str = '1min',
@@ -121,7 +122,7 @@ def gmo_get_trades(start_ymd: str, end_ymd: str = None, symbol: str = 'BTC_JPY',
 
 
 def gmo_trades_to_historical(start_ymd: str, end_ymd: str = None, symbol: str = 'BTC_JPY',
-                            period: str = '1s', price_pl_type: pl.PolarsDataType = pl.Float64,
+                            time_frame: str = '1s', pl_type: pl.PolarsDataType = pl.Float64,
                             output_dir: str = None, request_interval: float = 0.01,
                             progress_info: bool = True) -> None:
 
@@ -157,26 +158,8 @@ def gmo_trades_to_historical(start_ymd: str, end_ymd: str = None, symbol: str = 
                 continue
 
             try:
-                df = (
-                    pl.read_csv(f"https://api.coin.z.com/data/trades/{symbol}/{cur_dt:%Y}/{cur_dt:%m}/{cur_dt:%Y%m%d}_{symbol}.csv.gz")
-                    .with_columns([
-                                pl.col("timestamp").str.strptime(pl.Datetime).alias('datetime'),
-                                pl.col("price").cast(price_pl_type),
-                                pl.when(pl.col('side') == 'BUY').then(pl.col('size')).otherwise(0).alias('buy_size'),
-                                pl.when(pl.col('side') == 'SELL').then(pl.col('size')).otherwise(0).alias('sell_size')
-                                ])
-                                .set_sorted("datetime")
-                                .groupby_dynamic('datetime', every=period)
-                                .agg([
-                                pl.col("price").first().alias('open'),
-                                pl.col("price").max().alias('high'),
-                                pl.col("price").min().alias('low'),
-                                pl.col("price").last().alias('close'),
-                                pl.col("size").sum().alias('volume'),
-                                pl.col('buy_size').sum().alias('buy_vol'),
-                                pl.col('sell_size').sum().alias('sell_vol'),
-                                ])
-                    )
+                df = make_ohlcv(f"https://api.coin.z.com/data/trades/{symbol}/{cur_dt:%Y}/{cur_dt:%m}/{cur_dt:%Y%m%d}_{symbol}.csv.gz",
+                                "timestamp", "price", "size", "side", "BUY", "SELL", time_frame, pl_type)
             except Exception as e:
                 print(f"{e}")
                 df = None

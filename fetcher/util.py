@@ -32,7 +32,8 @@ def pl_merge(left, right, col):
 
 def make_ohlcv(path: str, date_column_name: str, price_column_name: str,
                size_column_name: str, side_column_name: str, buy, sell, time_frame, pl_type: pl.DataType) -> pl.DataFrame:
-    return (pl.scan_csv(path)
+    return (pl.read_csv(path)
+            .lazy()
             .with_columns([pl.col(date_column_name).str.strptime(pl.Datetime, strict=False).alias("datetime"),
                         pl.col(price_column_name).cast(pl_type),
                         pl.when(pl.col(side_column_name) == buy).then(pl.col(size_column_name)).otherwise(0).alias('buy_size'),
@@ -55,7 +56,8 @@ def make_ohlcv(path: str, date_column_name: str, price_column_name: str,
 def make_ohlcv_from_timestamp(path: str, date_column_name: str, price_column_name: str,
                               size_column_name: str, side_column_name: str, buy, sell,
                               time_frame, pl_type: pl.DataType, timestamp_multiplier: int) -> pl.DataFrame:
-    return (pl.scan_csv(path)
+    return (pl.read_csv(path)
+            .lazy()
             .with_columns([(pl.col(date_column_name) * timestamp_multiplier)
                            .cast(pl.Datetime(time_unit='us')).alias("datetime"),
                            pl.col(price_column_name).cast(pl_type),
