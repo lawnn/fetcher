@@ -190,6 +190,10 @@ def gmo_trades_to_historical(start_ymd: str, end_ymd: str = None, symbol: str = 
 
 def gmo_make_ohlcv(date: str, symbol: str = 'BTC_JPY',
                    time_frame: str = '1s', pl_type: pl.PolarsDataType = pl.Float64,):
+    """
+    example
+    print(gmo_make_ohlcv("2023-07-20", pl_type=pl.Int32))
+    """
     # 取得期間
     dt = str_to_datetime(date)
     after = dt + timedelta(days=1)
