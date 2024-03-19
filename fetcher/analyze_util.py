@@ -16,7 +16,7 @@ class Optimization(metaclass=ABCMeta):
         # ハイパーパラメータの設定
         config = {}
         for key, value in self.params.items():
-            config[key] = trial.suggest_int(key, value[0], value[1], value[2])
+            config[key] = trial.suggest_int(key, value[0], value[1], step=value[2])
         return self.indicator(**config)
 
     @abstractmethod
