@@ -95,7 +95,7 @@ def binance_get_trades(start_ymd: str, end_ymd: str = None, symbol: str = 'BTCUS
 
     df.to_csv(f'{output_dir}/{start_ymd}.csv')
 
-    print(f'{output_dir}/{start_ymd}.csv\nfile created!')
+    print(f'\n{output_dir}/{start_ymd}.csv\nfile created!')
 
 
 def binance_get_OI(st_date: str, symbol: str = 'BTCUSDT', period: str = '5m', output_dir: str = None) -> None:
