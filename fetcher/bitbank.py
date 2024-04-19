@@ -13,11 +13,12 @@ def bitbank_get_trades(st_date: str, symbol: str = "btc_jpy", output_dir: str = 
     r = requests.get(f"https://public.bitbank.cc/{symbol}/transactions/{st_date}").json()
 
     if output_dir is None:
-        output_dir = f'bitbank/trades/{symbol}'
+        output_dir = f'bitbank/{symbol}/trades'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
     pl.DataFrame(r["data"]["transactions"]).write_csv(f"{output_dir}/{dt}.csv")
+    print(f'[Output File] --> {output_dir}/{dt}.csv\nfile created!')
 
 
 def bitbank_trades_to_historical(start_ymd: str, end_ymd: str = None, symbol: str = 'btc_jpy',
@@ -28,7 +29,7 @@ def bitbank_trades_to_historical(start_ymd: str, end_ymd: str = None, symbol: st
     try:
         # 出力ディレクトリ設定
         if output_dir is None:
-            output_dir = f'./bitbank/{symbol}/trades/'
+            output_dir = f'./bitbank/{symbol}/ohlcv'
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
@@ -96,6 +97,7 @@ def bitbank_trades_to_historical(start_ymd: str, end_ymd: str = None, symbol: st
             total_count += 1
             if progress_info:
                 print(f'Completed output {csv_path}.csv')
+                print(f'[Output File] --> {csv_path}.csv\nfile created!')
 
             cur_dt += timedelta(days=1)
             if request_interval > 0:

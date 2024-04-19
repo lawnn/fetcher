@@ -3,7 +3,7 @@ import time
 import requests
 import pandas as pd
 import polars as pl
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from .util import pl_merge, make_ohlcv_from_timestamp
 from .time_util import datetime_to_ms
 
@@ -78,7 +78,7 @@ def binance_get_trades(start_ymd: str, end_ymd: str = None, symbol: str = 'BTCUS
             current_time = trades[-1]['T']
 
             print("\r"+
-                f'fetched {len(trades)} trades from id {from_id} @ {datetime.utcfromtimestamp(current_time / 1000.0)}',
+                f'fetched {len(trades)} trades from id {from_id} @ {datetime.fromtimestamp(current_time / 1000.0, tz=timezone.utc)}',
                   end="")
 
             df = pd.concat([df, pd.DataFrame(trades)])
@@ -95,7 +95,7 @@ def binance_get_trades(start_ymd: str, end_ymd: str = None, symbol: str = 'BTCUS
 
     df.to_csv(f'{output_dir}/{start_ymd}.csv')
 
-    print(f'\n{output_dir}/{start_ymd}.csv\nfile created!')
+    print(f'\n[Output File] --> {output_dir}/{start_ymd}.csv\nfile created!')
 
 
 def binance_get_OI(st_date: str, symbol: str = 'BTCUSDT', period: str = '5m', output_dir: str = None) -> None:

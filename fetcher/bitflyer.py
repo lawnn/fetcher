@@ -261,7 +261,7 @@ def bf_get_trades(start_ymd: str, end_ymd: str = None, symbol: str = 'FX_BTC_JPY
             path = f'{output_dir}/{cur_dt:%Y-%m-%d}.csv'
             path = path.replace('//', '/')
             df.write_csv(path)
-            print(f'[Output File] --> {path}')
+            print(f'\n[Output File] --> {path}')
             params["before"] = end_id = df.get_column("id")[0]
             response = requests.get('https://api.bitflyer.com/v1/getexecutions', params=params).json()
             counter += 1
