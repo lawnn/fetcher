@@ -52,7 +52,7 @@ def simple_regression(x: np.ndarray, y: np.ndarray, plot_graph=False, title: str
     ax.set_ylabel(y_label)
     ax.grid(which="major", axis="x", color="gray", alpha=0.5, linestyle="dotted", linewidth=1)
     ax.grid(which="major", axis="y", color="gray", alpha=0.5, linestyle="dotted", linewidth=1)
-    ax.text(1.02, 0.04, f"y = {a:.3f} ± {sigma_a:.3f}x + {b:.3f} ± {sigma_b:.3f}\nsigma_y={sigma_y:.3f}\nlength={x.size}", transform=ax.transAxes)
+    ax.text(1.02, 0.04, f"y = ({a:.3f} ± {sigma_a:.3f})x + ({b:.3f} ± {sigma_b:.3f}\nsigma_y={sigma_y:.3f}\nlength={x.size})", transform=ax.transAxes)
     ax.text(0.788, 0.1, f"R**2={r2:.4f}", transform=ax.transAxes)
     ax.text(0.59, 0.04, f"ProportionCorrect={(np.sqrt(r2) + 1) / 2 * 100:.2f}%", transform=ax.transAxes)
 
