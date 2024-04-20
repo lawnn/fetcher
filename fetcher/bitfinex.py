@@ -29,7 +29,7 @@ def bitfinex_get_trades(start_ymd: str, end_ymd: str = None, symbol: str = 'tBTC
     end_dt = int(end_ymd.timestamp()) * 1000
 
     if output_dir is None:
-        output_dir = f'./csv/trades/bitfinex/{symbol}'
+        output_dir = f'bitfinex/{symbol}/trades'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     path = f"{output_dir}/{end_ymd:%Y-%m-%d}.csv"

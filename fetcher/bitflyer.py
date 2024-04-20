@@ -24,11 +24,11 @@ def bf_get_historical(st_date: str, symbol: str = 'FX_BTC_JPY', period: str = 'm
     start = time.time()
 
     if output_dir is None:
-        output_dir = f'csv/bf_ohlcv_{symbol}'
+        output_dir = f'bitflyer/{symbol}/ohlcv/{grouping}{period}'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    path = f'{output_dir}_{period}.csv'
+    path = f'{output_dir}.csv'
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
     now = int(datetime.strptime(now_str, "%Y-%m-%d %H:%M").timestamp()) * 1000
     params = {'symbol': symbol, 'period': period, 'type': 'full', 'before': now, 'grouping': grouping}

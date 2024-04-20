@@ -102,7 +102,7 @@ def binance_get_OI(st_date: str, symbol: str = 'BTCUSDT', period: str = '5m', ou
     start = time.time()
 
     if output_dir is None:
-        output_dir = f'binance/OI/{symbol}'
+        output_dir = f'binance/{symbol}/OI'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -165,7 +165,7 @@ def binance_get_buy_sell_vol(st_date: str, symbol: str = 'BTCUSDT', period: str 
     start = time.time()
 
     if output_dir is None:
-        output_dir = f'binance/volume/{symbol}'
+        output_dir = f'binance/{symbol}/buy_sell_vol'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
