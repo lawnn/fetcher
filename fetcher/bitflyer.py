@@ -28,7 +28,7 @@ def bf_get_historical(st_date: str, symbol: str = 'FX_BTC_JPY', period: str = 'm
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    path = f'{output_dir}.csv'
+    path = f'{output_dir}/{datetime.now().strftime("%Y-%m-%d")}.csv'
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
     now = int(datetime.strptime(now_str, "%Y-%m-%d %H:%M").timestamp()) * 1000
     params = {'symbol': symbol, 'period': period, 'type': 'full', 'before': now, 'grouping': grouping}
