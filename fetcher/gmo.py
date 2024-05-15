@@ -8,7 +8,7 @@ from .time_util import str_to_datetime
 from .util import make_ohlcv, pl_merge
 
 
-def gmo_get_historical(start_ymd: str, end_ymd: str, symbol: str = 'BTC_JPY', interval: str = '1min',
+def gmo_get_historical(start_ymd: str, end_ymd: str = None, symbol: str = 'BTC_JPY', interval: str = '1min',
                        output_dir: str = None, request_interval: float = 0.2, progress_info: bool = True) -> None:
     """ example
     gmo_get_historical('2021/09/01', '2021/09/08')
@@ -27,7 +27,10 @@ def gmo_get_historical(start_ymd: str, end_ymd: str, symbol: str = 'BTC_JPY', in
         os.makedirs(output_dir)
 
     start_ymd = start_ymd.replace('/', '-')
-    end_ymd = end_ymd.replace('/', '-')
+    if end_ymd is None:
+        end_ymd = start_ymd
+    else:
+        end_ymd = end_ymd.replace('/', '-')
     start_dt = datetime.strptime(start_ymd, '%Y-%m-%d')
     end_dt = datetime.strptime(end_ymd, '%Y-%m-%d')
     if start_dt > end_dt:
