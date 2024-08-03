@@ -223,9 +223,9 @@ def binance_get_buy_sell_vol(st_date: str, symbol: str = 'BTCUSDT', period: str 
     print(f'elapsed time: {time.time() - start:.2f}sec')
 
 
-def binance_make_ohlcv(path: str, time_frame, pl_type: pl.PolarsDataType=pl.Float64) -> pl.DataFrame:
+def binance_make_ohlcv(path: str, time_frame, pl_type: pl.DataType=pl.Float64) -> pl.DataFrame:
     df = make_ohlcv_from_timestamp(path, "T", "p", "q", "m", True, False, time_frame, pl_type, 1_000)
     start_dt = datetime.combine(df["datetime"][0].date(), datetime.min.time())
     end_dt = datetime.combine(df["datetime"][-1].date(), datetime.min.time()) + timedelta(days=1, seconds=-1)
-    dt_range = pl.DataFrame({'datetime': pl.date_range(start_dt, end_dt, time_frame, eager=True)})
+    dt_range = pl.DataFrame({'datetime': pl.datetime_range(start_dt, end_dt, time_frame, eager=True)})
     return pl_merge(dt_range, df, "datetime")

@@ -22,7 +22,7 @@ def bitbank_get_trades(st_date: str, symbol: str = "btc_jpy", output_dir: str = 
 
 
 def bitbank_trades_to_historical(start_ymd: str, end_ymd: str = None, symbol: str = 'btc_jpy',
-                            period: str = '1s', price_pl_type: pl.PolarsDataType = pl.Float64,
+                            period: str = '1s', price_pl_type: pl.DataType = pl.Float64,
                             size_pl_type: type = pl.Float64, output_dir: str = None,
                             request_interval: float = 0.01, progress_info: bool = True) -> None:
 

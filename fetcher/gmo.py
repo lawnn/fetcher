@@ -125,7 +125,7 @@ def gmo_get_trades(start_ymd: str, end_ymd: str = None, symbol: str = 'BTC_JPY',
 
 
 def gmo_trades_to_historical(start_ymd: str, end_ymd: str = None, symbol: str = 'BTC_JPY',
-                            time_frame: str = '1s', pl_type: pl.PolarsDataType = pl.Float64,
+                            time_frame: str = '1s', pl_type: pl.DataType = pl.Float64,
                             output_dir: str = None, request_interval: float = 0.01,
                             progress_info: bool = True) -> None:
 
@@ -192,7 +192,7 @@ def gmo_trades_to_historical(start_ymd: str, end_ymd: str = None, symbol: str = 
 
 
 def gmo_make_ohlcv(date: str, symbol: str = 'BTC_JPY',
-                   time_frame: str = '1s', pl_type: pl.PolarsDataType = pl.Float64,):
+                   time_frame: str = '1s', pl_type: pl.DataType = pl.Float64,):
     """
     example
     print(gmo_make_ohlcv("2023-07-20", pl_type=pl.Int32))
@@ -213,7 +213,7 @@ def gmo_make_ohlcv(date: str, symbol: str = 'BTC_JPY',
         )
     start_dt = datetime.combine(df["datetime"][0].date(), datetime.min.time())
     end_dt = datetime.combine(df["datetime"][-1].date(), datetime.min.time()) + timedelta(days=1, seconds=-1)
-    dt_range = pl.DataFrame({'datetime': pl.date_range(start_dt, end_dt, time_frame, eager=True)})
+    dt_range = pl.DataFrame({'datetime': pl.datetime_range(start_dt, end_dt, time_frame, eager=True)})
     return pl_merge(dt_range, df, "datetime")
 
 
