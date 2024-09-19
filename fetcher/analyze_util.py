@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import plotly.graph_objs as go
 from matplotlib import pyplot as plt
 from abc import ABCMeta, abstractmethod
 
@@ -63,3 +64,102 @@ def simple_regression(x: np.ndarray, y: np.ndarray, plot_graph=False, title: str
             os.makedirs(output_dir)
         plt.savefig(f'{output_dir}/{title}.png')
     plt.show()
+
+def _simple_regression(x: np.ndarray, y: np.ndarray, plot_graph=False, title: str = "[Linear Regression]",
+                      x_label: str = "x", y_label: str = "y", output_dir: str = None, save_fig: bool = False):
+
+    ic = np.corrcoef(x, y)[0, 1]
+    r2 = ic ** 2
+    if np.isnan(r2):
+        r2 = 0
+
+    if not plot_graph:
+        return r2
+
+    N = len(x)
+    p, cov = np.polyfit(x, y, 1, cov=True)
+    a = p[0]
+    b = p[1]
+    sigma_a = np.sqrt(cov[0, 0])
+    sigma_b = np.sqrt(cov[1, 1])
+    sigma_y = np.sqrt(1 / (N - 2) * np.sum([(a * xi + b - yi) ** 2 for xi, yi in zip(x, y)]))
+    yy = a * x + b
+    
+    # グラフを作成
+    fig = go.Figure()
+
+    # 散布図を作成
+    fig.add_trace(
+        go.Scatter(
+        x=x,
+        y=y,
+        mode='markers',
+        marker=dict(color='blue', size=10, opacity=0.3),
+        name='Data Points'
+    ))
+
+    # 回帰直線を作成
+    fig.add_trace(
+        go.Scatter(
+        x=x,
+        y=yy,
+        mode='lines',
+        line=dict(color='red'),
+        name='Regression Line'
+    ))
+
+    # レイアウトを設定
+    fig.update_layout(
+        go.Layout(
+        title=f"{title}<br>IC={ic:4f}",
+        xaxis=dict(title=x_label),
+        yaxis=dict(title=y_label),
+        showlegend=True
+    ))
+
+    # アノテーションを追加
+    fig.add_annotation(
+        text=f"y = ({a:.3f} ± {sigma_a:.3f})x + ({b:.3f} ± {sigma_b:.3f})",
+        x=0.01,
+        y=0.15,
+        xref='paper',
+        yref='paper',
+        showarrow=False
+        )
+
+    fig.add_annotation(
+        text=f"sigma_y={sigma_y:.3f}",
+        x=0.01,
+        y=0.10,
+        xref='paper',
+        yref='paper',
+        showarrow=False
+        )
+
+    fig.add_annotation(
+        text=f"length={x.size}",
+        x=0.01,
+        y=0.05,
+        xref='paper',
+        yref='paper',
+        showarrow=False
+        )
+
+    fig.add_annotation(
+        text=f"R2={r2:4f}",
+        x=0.01,
+        y=0.0,
+        xref='paper',
+        yref='paper',
+        showarrow=False
+        )
+
+    if save_fig:
+        if output_dir is None:
+            output_dir = './png'
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        fig.write_image(f'{output_dir}/{title}.png')
+
+    # グラフを表示
+    fig.show()
