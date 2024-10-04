@@ -66,7 +66,7 @@ def make_ohlcv_from_timestamp(path: str, date_column_name: str, price_column_nam
                            pl.when(pl.col(side_column_name) == sell)
                            .then(pl.col(size_column_name)).otherwise(0).alias('sell_size')])
             .set_sorted("datetime")
-            .groupby_dynamic('datetime', every=time_frame)
+            .group_by_dynamic('datetime', every=time_frame)
             .agg([
                 pl.col(price_column_name).first().alias('open'),
                 pl.col(price_column_name).max().alias('high'),
