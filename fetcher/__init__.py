@@ -6,4 +6,4 @@ from .bybit import bybit_make_ohlcv
 from .gmo import gmo_get_historical, gmo_get_trades, gmo_trades_to_historical, gmo_make_ohlcv
 from .util import pl_merge, make_ohlcv, make_ohlcv_from_timestamp, np_shift, np_stack, resample_ohlc, trades_to_historical, df_list
 from .time_util import datetime_to_ms, datetime_to_timestamp, str_to_datetime
-from .analyze_util import Optimization, simple_regression, _simple_regression
+from .analyze_util import Optimization, simple_regression
