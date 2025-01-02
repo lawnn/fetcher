@@ -3,8 +3,9 @@ import time
 import requests
 import polars as pl
 from traceback import format_exc
-from datetime import timedelta
+from datetime import datetime, timedelta
 from .time_util import str_to_datetime
+from .util import pl_merge
 
 
 def bitbank_get_trades(st_date: str, symbol: str = "btc_jpy", output_dir: str = None) -> None:
@@ -71,7 +72,7 @@ def bitbank_trades_to_historical(start_ymd: str, end_ymd: str = None, symbol: st
                 pl.when(pl.col('side') == 'sell').then(pl.col('amount')).otherwise(0).alias('sell_size')
                 ])
                 .set_sorted("datetime")
-                .groupby_dynamic('datetime', every=period)
+                .group_by_dynamic('datetime', every=period)
                 .agg([
                 pl.col("price").first().alias('open'),
                 pl.col("price").max().alias('high'),
@@ -108,3 +109,37 @@ def bitbank_trades_to_historical(start_ymd: str, end_ymd: str = None, symbol: st
     except Exception as e:
         print(f'save_daily_ohlcv_from_bitbank_trading failed.\n{format_exc()}')
         raise e
+
+def bitbank_make_ohlcv(pair, YYYYMMDD, time_frame, price_pl_type: pl.DataType = pl.Int64, size_pl_type: pl.DataType = pl.Float64) -> pl.DataFrame:
+    """
+    約定履歴からohlcvを生成します
+    """
+    r = requests.get(f'https://public.bitbank.cc/{pair}/transactions/{YYYYMMDD}').json()
+
+    df = (pl.DataFrame(r['data']['transactions'])
+        .lazy()
+        .with_columns([(pl.col('executed_at') * 1000)
+                        .cast(pl.Datetime(time_unit='us')).alias("datetime"),
+                        pl.col('price').cast(price_pl_type),
+                        pl.col('amount').cast(size_pl_type),])
+        .with_columns([pl.when(pl.col('side') == 'buy')
+                        .then(pl.col('amount')).otherwise(0).alias('buy_size'),
+                        pl.when(pl.col('side') == 'sell')
+                        .then(pl.col('amount')).otherwise(0).alias('sell_size')])
+        .set_sorted("datetime")
+        .group_by_dynamic('datetime', every=time_frame)
+        .agg([
+            pl.col('price').first().alias('open'),
+            pl.col('price').max().alias('high'),
+            pl.col('price').min().alias('low'),
+            pl.col('price').last().alias('close'),
+            pl.col('amount').sum().alias('volume'),
+            pl.col('buy_size').sum().alias('buy_vol'),
+            pl.col('sell_size').sum().alias('sell_vol')
+        ])
+        .collect()
+        )
+    start_dt = datetime.combine(df["datetime"][0].date(), datetime.min.time())
+    end_dt = datetime.combine(df["datetime"][-1].date(), datetime.min.time()) + timedelta(days=1, seconds=-1)
+    dt_range = pl.DataFrame({'datetime': pl.datetime_range(start_dt, end_dt, time_frame, eager=True)})
+    return pl_merge(dt_range, df, "datetime")
