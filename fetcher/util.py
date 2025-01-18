@@ -118,6 +118,27 @@ def np_pct_change_shift(arr, num, fill_value=np.nan):
     return np_shift(np_pct_change(arr, num, fill_value), -num, fill_value)
 
 
+def pl_resample_ohlcv(df: pl.DataFrame, time_frame: str) -> pl.DataFrame:
+    """""""""
+    時間軸をリサンプリングします
+    :param df: polars.DataFrame
+    :param time_frame: 1s, 1m, 1h, 1d
+    :return: polars.DataFrame
+    """""""""
+    return df.group_by_dynamic(
+        "datetime",
+        every=time_frame
+        ).agg([
+            pl.col("open").first().alias("open"),
+            pl.col("high").max().alias("high"),
+            pl.col("low").min().alias("low"),
+            pl.col("close").last().alias("close"),
+            pl.col("volume").sum().alias("volume"),
+            pl.col("buy_vol").sum().alias("buy_vol"),
+            pl.col("sell_vol").sum().alias("sell_vol")
+        ])
+
+
 def resample_ohlc(org_df, timeframe):
     df = org_df.resample(f'{timeframe * 60}S').agg(
         {'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'volume': 'sum'})
