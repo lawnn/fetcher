@@ -102,6 +102,22 @@ def np_stack(x,y):
     return z[:,0], z[:,1]
 
 
+def np_pct_change(arr, num, fill_value=np.nan):
+    """
+    配列の変化率を計算します
+    単位は%
+    """
+    return (arr / np_shift(arr, num, fill_value) - 1) * 100
+
+
+def np_pct_change_shift(arr, num, fill_value=np.nan):
+    """
+    配列の変化率を計算してnum分だけシフトします
+    単位は%
+    """
+    return np_shift(np_pct_change(arr, num, fill_value), -num, fill_value)
+
+
 def resample_ohlc(org_df, timeframe):
     df = org_df.resample(f'{timeframe * 60}S').agg(
         {'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'volume': 'sum'})
