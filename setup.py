@@ -3,8 +3,8 @@ from setuptools import setup
 setup(
     name='fetcher',
     packages=['fetcher'],
-    version='7.4',
+    version='8.0.0',
     author='lawn',
     url='https://github.com/lawnn/fetcher.git',
-    install_requires=['requests', 'asyncio', 'matplotlib', 'pandas', 'numpy', 'polars', 'pytz']
+    install_requires=['requests', 'asyncio', 'matplotlib', 'plotly', 'pandas', 'numpy', 'polars', 'pytz', 'ccxt']
 )
