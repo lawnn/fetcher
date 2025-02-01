@@ -149,7 +149,7 @@ def resample_ohlc(org_df, timeframe):
     return df
 
 
-def trades_to_historical(df, period: str = '1S'):
+def trades_to_historical(df, period: str = '1s'):
     if 'side' in df.columns:
         df['side'] = df['side'].mask(df['side'] == 'Buy', 'buy')
         df['side'] = df['side'].mask(df['side'] == 'BUY', 'buy')
