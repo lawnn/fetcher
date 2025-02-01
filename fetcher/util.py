@@ -187,3 +187,11 @@ def trades_to_historical(df, period: str = '1S'):
                               ], axis=1)
         df_ohlcv.columns = ['open', 'high', 'low', 'close', 'volume']
     return df_ohlcv
+
+def list_to_pd(trades) -> pd.DataFrame:
+    df = pd.DataFrame(trades)
+    df = df[['datetime', 'price', 'amount', 'side']]
+    df['datetime'] = pd.to_datetime(df['datetime'])
+    df = df.set_index('datetime').sort_index()
+    df.rename(columns={'amount': 'size'}, inplace=True)
+    return df
