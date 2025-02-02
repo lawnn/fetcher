@@ -167,19 +167,18 @@ def trades_to_historical(df, period: str = '1s'):
                               ], axis=1)
         df_ohlcv.columns = ['open', 'high', 'low', 'close', 'volume', 'buyVol', 'sellVol']
     elif 'm' in df.columns:
-        df['T'] = df['T'] / 1000
-        df['T'] = pd.to_datetime(df['T'].astype(int), unit='s', utc=True, infer_datetime_format=True)
-        df = df.set_index('T')
-        df.index = df.index.tz_localize(None)
-        df['m'] = df['m'].mask(df['m'] is True, 'buy')
-        df['m'] = df['m'].mask(df['m'] is False, 'sell')
+        df['T'] = pd.to_datetime(df['T'] / 1000, unit='s', utc=True)
+        df.rename(columns={'T': 'datetime'}, inplace=True)
+        df = df.set_index('datetime').sort_index()
+        # df.index = df.index.tz_localize(None)
+        df['m'] = np.where(df['m'] == True, 'buy', 'sell')
         df["buyVol"] = np.where(df['m'] == 'buy', df['q'], 0)
         df["sellVol"] = np.where(df['m'] == 'sell', df['q'], 0)
         df_ohlcv = pd.concat([df["p"].resample(period).ohlc().ffill(),
-                              df["q"].resample(period).sum(),
-                              df["buyVol"].resample(period).sum(),
-                              df["sellVol"].resample(period).sum()
-                              ], axis=1)
+                        df["q"].resample(period).sum(),
+                        df["buyVol"].resample(period).sum(),
+                        df["sellVol"].resample(period).sum()
+                        ], axis=1)
         df_ohlcv.columns = ['open', 'high', 'low', 'close', 'volume', 'buyVol', 'sellVol']
     else:
         df_ohlcv = pd.concat([df["price"].resample(period).ohlc().ffill(),
